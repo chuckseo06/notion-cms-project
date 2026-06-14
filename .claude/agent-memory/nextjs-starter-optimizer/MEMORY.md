@@ -1,0 +1,1 @@
+- [Notion CMS 블로그 프로젝트 설정](project_notion_cms.md) — v5 API 변경사항, Next.js 16 패턴, TailwindCSS v4 주의사항
