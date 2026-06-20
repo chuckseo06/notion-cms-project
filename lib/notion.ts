@@ -1,215 +1,140 @@
-// Notion API 클라이언트 래퍼
-// @notionhq/client v5를 감싸서 타입 안전한 함수들을 제공합니다.
-// v5 Breaking Change: databases.query → dataSources.query (data_source_id 사용)
+﻿import { Client } from "@notionhq/client";
+import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
+import { NotionPost, NotionBlock } from "@/types/notion";
 
-import { Client } from "@notionhq/client";
-import { z } from "zod";
-import type { NotionPost, NotionBlock, GetPostsOptions } from "@/types/notion";
+// 환경 변수 로드 및 검증
+const NOTION_API_KEY = process.env.NOTION_API_KEY;
+const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID;
 
-// ─── Notion 클라이언트 싱글톤 ─────────────────────────────────────────────────
-
-const notion = new Client({
-  auth: process.env.NOTION_API_KEY,
-});
-
-// v5에서 Notion DB는 "data source"로 취급됩니다.
-// NOTION_DATABASE_ID는 data_source_id로 사용됩니다.
-const DATA_SOURCE_ID = process.env.NOTION_DATABASE_ID ?? "";
-
-// ─── 내부 유틸리티 ────────────────────────────────────────────────────────────
-
-/** Notion 리치 텍스트 배열에서 plain_text를 추출하는 헬퍼 */
-function extractPlainText(
-  richText: Array<{ plain_text: string }>
-): string {
-  return richText.map((t) => t.plain_text).join("");
+if (!NOTION_API_KEY) {
+  throw new Error("NOTION_API_KEY 환경 변수가 설정되지 않았습니다.");
 }
 
-/** Notion 파일/URL 속성에서 URL을 추출하는 헬퍼 */
-function extractFileUrl(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  file: any
-): string | null {
-  if (!file) return null;
-  if (file.type === "file") return file.file?.url ?? null;
-  if (file.type === "external") return file.external?.url ?? null;
-  return null;
+if (!NOTION_DATABASE_ID) {
+  throw new Error("NOTION_DATABASE_ID 환경 변수가 설정되지 않았습니다.");
 }
 
-// Notion API 페이지 응답 최소 스키마
-const NotionPageSchema = z.object({
-  id: z.string(),
-  properties: z.record(z.string(), z.unknown()),
-});
+// Notion 클라이언트 초기화 (싱글톤 패턴)
+export const notion = new Client({ auth: NOTION_API_KEY });
 
-// ─── API 함수 ─────────────────────────────────────────────────────────────────
-
-/**
- * Notion DB에서 Published=true인 포스트 목록을 조회합니다.
- * 태그 필터링 옵션을 지원합니다.
- */
-export async function getPublishedPosts(
-  options: GetPostsOptions = {}
-): Promise<NotionPost[]> {
-  const { tag, pageSize = 100 } = options;
-
-  // 기본 필터: Published 체크박스가 true인 항목만
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const baseFilter: any = {
-    property: "Published",
-    checkbox: { equals: true },
-  };
-
-  // 태그 필터 추가 시 AND 조건으로 결합
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const filter: any = tag
-    ? {
-        and: [
-          baseFilter,
-          {
-            property: "Tags",
-            multi_select: { contains: tag },
-          },
-        ],
-      }
-    : baseFilter;
-
-  const response = await notion.dataSources.query({
-    data_source_id: DATA_SOURCE_ID,
-    filter,
-    sorts: [
-      {
-        property: "PublishedAt",
-        direction: "descending",
-      },
-    ],
-    page_size: pageSize,
-  });
-
-  return response.results
-    .map((page) => mapPageToPost(page))
-    .filter((post): post is NotionPost => post !== null);
+// 에러 타입 정의
+export class NotionAPIError extends Error {
+  constructor(
+    public code: string,
+    message: string
+  ) {
+    super(message);
+    this.name = "NotionAPIError";
+  }
 }
 
-/**
- * 슬러그(Slug)로 단일 포스트를 조회합니다.
- * Published=true 조건을 함께 검사합니다.
- */
-export async function getPostBySlug(slug: string): Promise<NotionPost | null> {
-  const response = await notion.dataSources.query({
-    data_source_id: DATA_SOURCE_ID,
-    filter: {
-      and: [
-        {
-          property: "Slug",
-          rich_text: { equals: slug },
-        },
-        {
-          property: "Published",
-          checkbox: { equals: true },
-        },
-      ],
-    },
-    page_size: 1,
-  });
-
-  if (response.results.length === 0) return null;
-  return mapPageToPost(response.results[0]);
+// 헬퍼 함수: 텍스트 속성 추출
+export function extractText(property: any): string {
+  if (!property || property.type !== "title") {
+    return "";
+  }
+  const richTextArray = property.title || [];
+  return richTextArray.map((item: any) => item.plain_text).join("");
 }
 
-/**
- * 포스트의 본문 블록들을 페이지 ID로 조회합니다.
- * 중첩 블록(has_children=true)은 재귀적으로 가져옵니다.
- */
-export async function getPostBlocks(pageId: string): Promise<NotionBlock[]> {
-  const blocks: NotionBlock[] = [];
-  let cursor: string | undefined;
+// 헬퍼 함수: 날짜 속성 추출
+export function extractDate(property: any): Date | null {
+  if (!property || property.type !== "date" || !property.date) {
+    return null;
+  }
+  const dateStr = property.date.start;
+  if (!dateStr) return null;
+  return new Date(dateStr);
+}
 
-  // 페이지네이션으로 모든 블록 수집
-  do {
-    const response = await notion.blocks.children.list({
-      block_id: pageId,
-      start_cursor: cursor,
-      page_size: 100,
-    });
+// 헬퍼 함수: 다중선택 속성 추출 (Tags)
+export function extractMultiSelect(property: any): string[] {
+  if (!property || property.type !== "multi_select") {
+    return [];
+  }
+  const options = property.multi_select || [];
+  return options.map((option: any) => option.name);
+}
 
-    for (const block of response.results) {
-      blocks.push(block as NotionBlock);
+// 헬퍼 함수: 커버 이미지 URL 추출
+export function extractCoverUrl(property: any): string | null {
+  if (!property) {
+    return null;
+  }
 
-      // 하위 블록이 있는 경우 재귀 조회 (목록 들여쓰기, 토글 등)
-      if ("has_children" in block && block.has_children) {
-        const childBlocks = await getPostBlocks(block.id);
-        blocks.push(...childBlocks);
-      }
+  // Files & media 속성
+  if (property.type === "files" && property.files && property.files.length > 0) {
+    const file = property.files[0];
+    if (file.type === "file" && file.file?.url) {
+      return file.file.url;
     }
-
-    cursor = response.next_cursor ?? undefined;
-  } while (cursor);
-
-  return blocks;
-}
-
-/**
- * DB에 존재하는 모든 태그 목록을 중복 없이 반환합니다.
- * 홈 페이지 태그 필터 UI 렌더링에 사용됩니다.
- */
-export async function getAllTags(): Promise<string[]> {
-  const posts = await getPublishedPosts();
-  const tagSet = new Set<string>();
-
-  for (const post of posts) {
-    for (const tag of post.tags) {
-      tagSet.add(tag);
+    if (file.type === "external" && file.external?.url) {
+      return file.external.url;
     }
   }
 
-  return Array.from(tagSet).sort();
+  return null;
 }
 
-// ─── 내부 매핑 유틸리티 ───────────────────────────────────────────────────────
-
-/**
- * Notion API 페이지 응답을 NotionPost 타입으로 변환합니다.
- * 속성이 누락되거나 형식이 맞지 않으면 null을 반환합니다.
- */
-function mapPageToPost(page: unknown): NotionPost | null {
-  try {
-    const parsed = NotionPageSchema.parse(page);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const props = parsed.properties as Record<string, any>;
-
-    // 제목 속성 추출 (Title 또는 Name 프로퍼티)
-    const title = extractPlainText(
-      props["Title"]?.title ?? props["Name"]?.title ?? []
+// 에러 처리 함수
+export function handleNotionError(error: any): NotionAPIError {
+  if (error.status === 401) {
+    return new NotionAPIError(
+      "UNAUTHORIZED",
+      "Notion API 인증 오류: NOTION_API_KEY를 확인하세요."
     );
+  }
 
-    // 슬러그 속성 추출
-    const slug = extractPlainText(props["Slug"]?.rich_text ?? []);
+  if (error.status === 403) {
+    return new NotionAPIError(
+      "FORBIDDEN",
+      "Notion Database 접근 권한 오류: Integration이 Database에 공유되었는지 확인하세요."
+    );
+  }
 
-    // 게시 여부
-    const isPublished: boolean = props["Published"]?.checkbox ?? false;
+  if (error.status === 404) {
+    return new NotionAPIError(
+      "NOT_FOUND",
+      "Notion Database를 찾을 수 없습니다: NOTION_DATABASE_ID를 확인하세요."
+    );
+  }
 
-    // 게시 날짜
-    const publishedAt: string | null = props["PublishedAt"]?.date?.start ?? null;
+  if (error.status === 429) {
+    return new NotionAPIError(
+      "RATE_LIMIT",
+      "Notion API Rate Limit 초과: 잠시 후 다시 시도하세요."
+    );
+  }
 
-    // 태그 목록
-    const tags: string[] =
-      props["Tags"]?.multi_select?.map(
-        (t: { name: string }) => t.name
-      ) ?? [];
+  return new NotionAPIError(
+    error.code || "UNKNOWN",
+    error.message || "Notion API 오류가 발생했습니다."
+  );
+}
 
-    // 요약
-    const excerpt: string = extractPlainText(props["Excerpt"]?.rich_text ?? []);
+// parsePost 함수 (Phase 1.3.4에서 구현)
+export function parsePost(page: PageObjectResponse): NotionPost | null {
+  try {
+    const properties = page.properties as Record<string, any>;
 
-    // 커버 이미지
-    const coverRaw = props["Cover"]?.files?.[0] ?? null;
-    const coverImage = extractFileUrl(coverRaw);
+    const title = extractText(properties.Title);
+    const slug = extractText(properties.Slug);
+    const publishedAt = extractDate(properties.PublishedAt);
+    const tags = extractMultiSelect(properties.Tags);
+    const excerpt = extractText(properties.Excerpt);
+    const coverImage = extractCoverUrl(properties.Cover);
+    const isPublished = properties.Published?.checkbox ?? false;
 
-    // slug가 없으면 유효하지 않은 포스트
-    if (!slug) return null;
+    // 필수 필드 검증
+    if (!title || !slug || !publishedAt) {
+      console.warn(
+        `[Notion API] 포스트 파싱 오류: 포스트 ${page.id}의 필수 필드 누락`
+      );
+      return null;
+    }
 
     return {
-      id: parsed.id,
+      id: page.id,
       slug,
       title,
       publishedAt,
@@ -218,8 +143,43 @@ function mapPageToPost(page: unknown): NotionPost | null {
       coverImage,
       isPublished,
     };
-  } catch {
-    // 파싱 실패 시 해당 포스트 제외
+  } catch (error) {
+    console.error(`[Notion API] 포스트 ${page.id} 파싱 중 오류:`, error);
     return null;
+  }
+}
+
+// getAllPosts 함수 (Phase 1.3.5에서 구현)
+export async function getAllPosts(): Promise<NotionPost[]> {
+  try {
+    const response = await notion.databases.query({
+      database_id: NOTION_DATABASE_ID,
+      filter: {
+        property: "Published",
+        checkbox: { equals: true },
+      },
+      sorts: [
+        {
+          property: "PublishedAt",
+          direction: "descending",
+        },
+      ],
+      page_size: 100,
+    });
+
+    const posts: NotionPost[] = [];
+    for (const page of response.results) {
+      const post = parsePost(page as PageObjectResponse);
+      if (post) {
+        posts.push(post);
+      }
+    }
+
+    console.log(`[Notion API] 포스트 ${posts.length}개 조회됨`);
+    return posts;
+  } catch (error: any) {
+    const notionError = handleNotionError(error);
+    console.error(`[Notion API] 포스트 조회 실패:`, notionError.message);
+    throw notionError;
   }
 }

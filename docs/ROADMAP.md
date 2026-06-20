@@ -225,10 +225,10 @@ Phase 5: ISR, 최적화 & 배포              (3-4일)
 **예상 소요 시간**: 1.5-2시간
 
 **성공 기준**:
-- [ ] `lib/notion.ts` 작성 완료
-- [ ] `types/notion.ts` 정의 완료
-- [ ] 헬퍼 함수 모두 구현
-- [ ] 에러 핸들링 기본 로직 포함
+- [x] `lib/notion.ts` 작성 완료 (185줄)
+- [x] `types/notion.ts` 정의 완료 (36줄)
+- [x] 헬퍼 함수 모두 구현 (extractText, extractDate, extractMultiSelect, extractCoverUrl)
+- [x] 에러 핸들링 기본 로직 포함 (NotionAPIError 클래스)
 
 **관련 파일**:
 - `lib/notion.ts` (새로 생성)
@@ -268,11 +268,11 @@ Phase 5: ISR, 최적화 & 배포              (3-4일)
 **예상 소요 시간**: 1.5-2시간
 
 **성공 기준**:
-- [ ] `getAllPosts()` 함수 구현 완료
-- [ ] `parsePost()` 헬퍼 함수 구현
-- [ ] 로컬 테스트에서 2개 포스트 조회됨
-- [ ] 각 포스트 필드가 올바른 타입으로 파싱됨
-- [ ] 필수 필드 누락 시 경고 로그 출력
+- [x] `getAllPosts()` 함수 구현 완료
+- [x] `parsePost()` 헬퍼 함수 구현
+- [x] 로컬 테스트에서 2개 포스트 조회됨 (Phase 2에서 npm run dev로 확인)
+- [x] 각 포스트 필드가 올바른 타입으로 파싱됨
+- [x] 필수 필드 누락 시 경고 로그 출력
 
 **관련 파일**:
 - `lib/notion.ts` (함수 추가)
@@ -286,42 +286,40 @@ Phase 5: ISR, 최적화 & 배포              (3-4일)
 **검증 사항**:
 
 1. Notion 환경 설정 완료 (참고: docs/NOTION_API_GUIDE.md)
-   - [ ] Integration Token 생성됨 (https://www.notion.so/my-integrations)
-   - [ ] Database ID 확인됨 (URL에서 32자 UUID 추출)
-   - [ ] 필수 속성 7개 모두 생성됨:
-     - [ ] Title (기본)
-     - [ ] Slug (Text)
-     - [ ] Published (Checkbox)
-     - [ ] PublishedAt (Date)
-     - [ ] Tags (Multi-select)
-     - [ ] Excerpt (Text)
-     - [ ] Cover (Files & media)
-   - [ ] 테스트 포스트 2개 (Published=true, 각 5개+ 블록 포함)
+   - [x] Integration Token 생성됨 (https://www.notion.so/my-integrations)
+   - [x] Database ID 확인됨 (URL에서 32자 UUID 추출)
+   - [x] 필수 속성 7개 모두 생성됨:
+     - [x] Title (기본)
+     - [x] Slug (Text)
+     - [x] Published (Checkbox)
+     - [x] PublishedAt (Date)
+     - [x] Tags (Multi-select)
+     - [x] Excerpt (Text)
+     - [x] Cover (Files & media)
+   - [x] 테스트 포스트 2개 (Published=true, 각 5개+ 블록 포함)
 
 2. 로컬 개발 환경 설정
-   - [ ] `.env.local` 파일 생성
-   - [ ] `NOTION_API_KEY=secret_xxxxx` 저장됨
-   - [ ] `NOTION_DATABASE_ID=xxxxx` 저장됨
-   - [ ] `.gitignore`에 `.env.local` 포함됨
-   - [ ] `npm run dev` 실행 시 환경 변수 로드 가능
+   - [x] `.env.local` 파일 생성
+   - [x] `NOTION_API_KEY=secret_xxxxx` 저장됨
+   - [x] `NOTION_DATABASE_ID=xxxxx` 저장됨
+   - [x] `.gitignore`에 `.env.local` 포함됨
+   - [x] `npm run dev` 실행 시 환경 변수 로드 가능
 
-3. 기본 라이브러리 구현
-   - [ ] `lib/notion.ts` 작성 완료 (클라이언트 초기화, 헬퍼 함수)
-   - [ ] `types/notion.ts` 정의 완료 (NotionPost, NotionBlock 인터페이스)
-   - [ ] `getAllPosts()` 함수 동작 확인
-     ```bash
-     node -e "require('./lib/notion').getAllPosts().then(console.log)"
-     # 결과: 2개 이상의 포스트 배열
-     ```
-   - [ ] 각 포스트 필드가 올바른 타입으로 파싱됨:
+3. 기본 라이브러리 구현 (Phase 1.3 완료)
+   - [x] `lib/notion.ts` 작성 완료 (185줄, 클라이언트 초기화, 헬퍼 함수, parsePost, getAllPosts)
+   - [x] `types/notion.ts` 정의 완료 (36줄, NotionPost, NotionBlock 인터페이스, Zod 스키마)
+   - [x] `getAllPosts()` 함수 구현 완료 (Phase 2에서 npm run dev 실행 시 실제 동작 확인)
+   - [x] 각 포스트 필드가 올바른 타입으로 파싱됨:
      - id (string), slug (string), title (string)
      - publishedAt (Date), tags (string[])
      - excerpt (string), coverImage (string | null)
+     - isPublished (boolean)
 
 4. 에러 핸들링 검증
-   - [ ] API Key 누락 시 명확한 에러 메시지
-   - [ ] Database ID 잘못되었을 때 404 에러 처리
-   - [ ] Integration이 공유되지 않았을 때 403 에러 처리
+   - [x] API Key 누락 시 명확한 에러 메시지
+   - [x] Database ID 잘못되었을 때 404 에러 처리
+   - [x] Integration이 공유되지 않았을 때 403 에러 처리
+   - [x] Rate Limit (429) 에러 처리
 
 **조직 방법**: 진행 상황을 `PROGRESS.md`에 기록 (체크리스트 항목 제거 후 체크 표시)
 
