@@ -1112,9 +1112,9 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
 
 
 **성공 기준**:
-- [ ] 404 페이지 렌더링됨
-- [ ] 홈으로 이동 버튼 작동
-- [ ] 모든 불가능한 경로에서 404 표시됨
+- [x] 404 페이지 렌더링됨
+- [x] 홈으로 이동 버튼 작동
+- [x] 모든 불가능한 경로에서 404 표시됨
 
 **관련 파일**:
 - `app/not-found.tsx` (새로 생성)
@@ -1145,9 +1145,9 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
 
 
 **성공 기준**:
-- [ ] Header 스타일 일관성 확인
-- [ ] Footer 스타일 일관성 확인
-- [ ] 모든 페이지에서 동일하게 표시됨
+- [x] Header 스타일 일관성 확인
+- [x] Footer 스타일 일관성 확인
+- [x] 모든 페이지에서 동일하게 표시됨
 
 **관련 파일**:
 - `components/Header.tsx` (수정)
@@ -1179,9 +1179,9 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
 
 
 **성공 기준**:
-- [ ] 태그 필터링 일관되게 작동
-- [ ] 포스트 상세에서 태그 클릭 시 홈 필터 적용
-- [ ] 모바일에서 UI 가독성 확인
+- [x] 태그 필터링 일관되게 작동
+- [x] 포스트 상세에서 태그 클릭 시 홈 필터 적용
+- [x] 모바일에서 UI 가독성 확인
 
 **관련 파일**:
 - `components/TagFilter.tsx` (최적화)
@@ -1189,22 +1189,22 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
 
 ---
 
-### Phase 4 체크포인트 (Checkpoint 4)
+### Phase 4 체크포인트 (Checkpoint 4) ✅ 완료
 
 **검증 사항**:
 
 1. 404 페이지
-   - [ ] 404 페이지 렌더링됨
-   - [ ] 홈 버튼 작동
+   - [x] 404 페이지 렌더링됨
+   - [x] 홈 버튼 작동
 
 2. 전역 레이아웃
-   - [ ] 모든 페이지에 헤더/푸터 포함
-   - [ ] 스타일 일관성 유지
+   - [x] 모든 페이지에 헤더/푸터 포함
+   - [x] 스타일 일관성 유지
 
 3. 네비게이션 통합
-   - [ ] 홈 ↔ 포스트 상세 네비게이션
-   - [ ] 태그 필터링 일관성
-   - [ ] 404 페이지 네비게이션
+   - [x] 홈 ↔ 포스트 상세 네비게이션
+   - [x] 태그 필터링 일관성
+   - [x] 404 페이지 네비게이션
 
 ---
 
@@ -1742,11 +1742,11 @@ Phase 5 (배포)
 | Phase 1 | ✅ 완료 | 2026-06-21 | 4-5일 예상 → 3일 소요 (Notion API 에러 해결 추가) |
 | Phase 2 | ✅ 완료 | 2026-06-21 | 4-5일 예상 → 2일 소요 |
 | Phase 3 | ✅ 완료 | 2026-06-22 | 5-6일 예상 → 2일 소요 |
-| Phase 4 | ⏳ 진행 예정 | - | 2-3일 예상 |
+| Phase 4 | ✅ 완료 | 2026-06-22 | 2-3일 예상 → 1일 소요 |
 | Phase 5 | ⏳ 예정 | - | 3-4일 예상 |
 
-**누적 진행률**: 60% (Phase 1-3 완료)  
-**남은 일정**: Phase 4-5 (약 5-7일)
+**누적 진행률**: 80% (Phase 1-4 완료)  
+**남은 일정**: Phase 5 (약 3-4일)
 
 ### 주요 성과
 
@@ -1759,15 +1759,19 @@ Phase 5 (배포)
 ✅ BlockRenderer 컴포넌트 (8개 블록 타입 완전 지원)  
 ✅ Shiki 코드 구문 강조 통합  
 ✅ 동적 OG 메타태그 생성 (SEO 최적화)  
-✅ 소셜 공유 기능 (Twitter, Facebook)
+✅ 소셜 공유 기능 (Twitter, Facebook)  
+✅ 커스텀 404 페이지 구현  
+✅ 헤더/푸터 최적화 (sticky, 반응형)  
+✅ 태그 필터 UI 개선 (모바일 친화적)
 
 ### 다음 단계
 
-🔜 **Phase 4: 404 페이지 & 전역 레이아웃 정리**
-- `app/not-found.tsx` 커스텀 404 페이지
-- 헤더/푸터 최적화
-- 태그 필터 UI 통합 테스트
-- 페이지 간 네비게이션 검증
+🔜 **Phase 5: ISR, 최적화 & 배포**
+- Phase 5.1: ISR 재검증 설정 강화
+- Phase 5.2: 성능 최적화 (이미지, 캐싱)
+- Phase 5.3: 에러 처리 & 견고성 강화
+- Phase 5.4: Vercel 배포
+- Phase 5.5: 최종 테스트 & 문서화
 
 ### 추적 방법
 
@@ -1783,13 +1787,24 @@ Phase 1-2 Checkpoint: Notion API 연동 및 홈 페이지 완성
 - 확인: Notion 실시간 동기화 (개발 서버 즉시 반영)
 ```
 
-**다음 커밋 예정**:
+**마지막 커밋 (Phase 3)**:
 ```bash
-Phase 3: 포스트 상세 페이지 구현
+Phase 3 완료: 포스트 상세 페이지 및 블록 렌더링 구현
 - 포스트 상세 조회 함수 (getPostBySlug, getPostBlocks)
 - BlockRenderer 컴포넌트 (Notion 블록 → HTML)
 - Shiki 코드 구문 강조
-- 동적 OG 메타태그
+- 동적 OG 메타태그 (og:title, og:description, og:image, og:url, article:*)
+- 소셜 공유 버튼 (Twitter, Facebook)
+```
+
+**현재 커밋 예정 (Phase 4)**:
+```bash
+Phase 4 완료: 404 페이지 & 전역 레이아웃 최적화
+- 커스텀 404 페이지 (app/not-found.tsx)
+- Header 컴포넌트 (sticky, 반응형)
+- Footer 컴포넌트 (저작권, 블로거 정보)
+- TagFilter UI 최적화 (반응형, 모바일 친화적)
+- ROADMAP.md Phase 4 체크포인트 완료
 ```
 
 ---
@@ -1835,8 +1850,8 @@ A: Phase 3.2의 BlockRenderer에 해당 타입을 추가하면 됩니다. docs/N
 
 ---
 
-**로드맵 버전**: 1.1 (NOTION_API_GUIDE.md 연계 개선)  
+**로드맵 버전**: 1.2 (Phase 1-4 완료, Phase 5 준비)  
 **작성일**: 2026-06-16  
-**마지막 업데이트**: 2026-06-16  
+**마지막 업데이트**: 2026-06-22  
 **작성자**: Claude Code (AI Assistant)  
 **관련 문서**: docs/NOTION_API_GUIDE.md, docs/PRD.md, shrimp-rules.md

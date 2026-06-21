@@ -40,31 +40,59 @@ export function TagFilter({ tags, selectedTag }: TagFilterProps) {
   if (tags.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {/* 전체 보기 버튼 */}
-      <Button
-        variant={selectedTag ? "outline" : "default"}
-        size="sm"
-        onClick={handleClearFilter}
-        className="h-7"
-      >
-        전체
-      </Button>
+    <div className="mb-8">
+      <div className="flex items-center mb-3">
+        <span className="text-sm font-semibold text-gray-700">필터:</span>
+      </div>
 
-      {/* 태그 배지 목록 */}
-      {tags.map((tag) => (
-        <Badge
-          key={tag}
-          variant={selectedTag === tag ? "default" : "outline"}
+      {/* 태그 필터 컨테이너 - 반응형 레이아웃 */}
+      <div className="flex flex-wrap items-center gap-2">
+        {/* 전체 보기 버튼 */}
+        <Button
+          variant={selectedTag ? "outline" : "default"}
+          size="sm"
+          onClick={handleClearFilter}
           className={cn(
-            "cursor-pointer select-none transition-colors",
-            "hover:bg-primary hover:text-primary-foreground"
+            "h-8 px-3 text-xs font-medium rounded-full transition-all",
+            selectedTag
+              ? "bg-white border border-gray-300 text-gray-700 hover:border-gray-400"
+              : "bg-blue-500 text-white hover:bg-blue-600"
           )}
-          onClick={() => handleTagClick(tag)}
         >
-          {tag}
-        </Badge>
-      ))}
+          전체
+        </Button>
+
+        {/* 태그 배지 목록 */}
+        <div className="flex flex-wrap gap-2">
+          {tags.map((tag) => (
+            <button
+              key={tag}
+              onClick={() => handleTagClick(tag)}
+              className={cn(
+                "h-8 px-3 text-xs font-medium rounded-full transition-all select-none whitespace-nowrap",
+                selectedTag === tag
+                  ? "bg-blue-500 text-white shadow-sm"
+                  : "bg-gray-100 text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+              )}
+            >
+              #{tag}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 선택된 필터 표시 */}
+      {selectedTag && (
+        <div className="mt-3 text-xs text-gray-600">
+          선택됨: <span className="font-semibold">{selectedTag}</span>
+          <button
+            onClick={handleClearFilter}
+            className="ml-2 text-blue-500 hover:text-blue-700 underline"
+          >
+            초기화
+          </button>
+        </div>
+      )}
     </div>
   );
 }
