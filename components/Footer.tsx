@@ -4,7 +4,7 @@ export function Footer() {
   return (
     <footer className="border-t border-gray-200 bg-gray-50 mt-16">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           {/* 블로거 소개 */}
           <div>
             <h3 className="font-bold text-lg mb-2 text-gray-900">About</h3>
@@ -13,17 +13,7 @@ export function Footer() {
             </p>
           </div>
 
-          {/* 카테고리/태그 (선택적) */}
-          <div>
-            <h3 className="font-bold text-lg mb-2 text-gray-900">주제</h3>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>웹 개발</li>
-              <li>프로그래밍</li>
-              <li>기술 블로그</li>
-            </ul>
-          </div>
-
-          {/* 소셜 링크 (선택적) */}
+          {/* 소셜 링크 */}
           <div>
             <h3 className="font-bold text-lg mb-2 text-gray-900">Connect</h3>
             <div className="flex gap-4">
@@ -32,12 +22,6 @@ export function Footer() {
                 className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
                 GitHub
-              </a>
-              <a
-                href="#"
-                className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                Twitter
               </a>
             </div>
           </div>
