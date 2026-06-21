@@ -3,6 +3,7 @@ import { BlockRenderer } from "@/components/BlockRenderer";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 
 export const revalidate = 3600;
 
@@ -31,7 +32,6 @@ export async function generateMetadata(
     title: `${post.title} | 보석함`,
     description,
     keywords: [...post.tags, "블로그", "일상"],
-    canonical: postUrl,
     openGraph: {
       title: post.title,
       description,
@@ -81,12 +81,16 @@ export default async function PostPage({ params }: PostPageProps) {
       {/* 커버 이미지 */}
       {post.coverImage && (
         <div className="mb-8 -mx-4 md:mx-0 md:rounded-lg overflow-hidden bg-gray-200">
-          <img
-            src={post.coverImage}
-            alt={post.title}
-            className="w-full h-96 object-cover"
-            loading="eager"
-          />
+          <div className="relative w-full h-96">
+            <Image
+              src={post.coverImage}
+              alt={post.title}
+              fill
+              className="object-cover"
+              priority={true}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1000px"
+            />
+          </div>
         </div>
       )}
 

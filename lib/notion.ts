@@ -20,6 +20,40 @@ export const notion = new Client({
   auth: NOTION_API_KEY,
 });
 
+// Rate Limiting 설정
+const MAX_RETRIES = 3;
+const INITIAL_DELAY = 1000; // 1초
+
+/**
+ * Notion API 요청에 대한 재시도 로직 (Exponential Backoff)
+ * 429 (Rate Limit) 에러에 대해 자동으로 재시도합니다.
+ *
+ * @param fn 실행할 비동기 함수
+ * @param retries 남은 재시도 횟수
+ * @returns 함수 실행 결과
+ */
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  retries = MAX_RETRIES
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (error: any) {
+    // 429 에러이고 재시도 남아있으면 재시도
+    if (error.status === 429 && retries > 0) {
+      // Exponential backoff: 1초, 2초, 4초
+      const delay = INITIAL_DELAY * Math.pow(2, MAX_RETRIES - retries);
+      const retriesLeft = retries - 1;
+      console.warn(
+        `[Notion API] Rate limit 초과. ${delay}ms 후 재시도... (남은 시도: ${retriesLeft})`
+      );
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return withRetry(fn, retriesLeft);
+    }
+    throw error;
+  }
+}
+
 // 에러 타입 정의
 export class NotionAPIError extends Error {
   constructor(
@@ -170,13 +204,15 @@ export async function getAllPosts(): Promise<NotionPost[]> {
   try {
     console.log(`[Notion API] Database 메타데이터 조회 중...`);
 
-    // Step 1: Database 메타데이터 조회 (data_source_id 추출용)
-    const databaseInfo = await notion.databases.retrieve({
-      database_id: NOTION_DATABASE_ID,
-    });
+    // Step 1: Database 메타데이터 조회 (data_source_id 추출용) - withRetry 적용
+    const databaseInfo = await withRetry(() =>
+      notion.databases.retrieve({
+        database_id: NOTION_DATABASE_ID!,
+      })
+    );
 
     // data_sources 배열에서 첫 번째 data source ID 추출
-    const dataSourceId = databaseInfo.data_sources?.[0]?.id;
+    const dataSourceId = (databaseInfo as any).data_sources?.[0]?.id;
     if (!dataSourceId) {
       throw new Error(
         "Database에서 data_source_id를 찾을 수 없습니다. Database가 올바르게 설정되었는지 확인하세요."
@@ -186,21 +222,23 @@ export async function getAllPosts(): Promise<NotionPost[]> {
     console.log(`[Notion API] data_source_id: ${dataSourceId}`);
     console.log(`[Notion API] dataSources.query() 호출 시작...`);
 
-    // Step 2: dataSources.query() 호출 (올바른 data_source_id 사용)
-    const response = await notion.dataSources.query({
-      data_source_id: dataSourceId,
-      filter: {
-        property: "Published",
-        checkbox: { equals: true },
-      },
-      sorts: [
-        {
-          property: "PublishedAt",
-          direction: "descending",
+    // Step 2: dataSources.query() 호출 (올바른 data_source_id 사용) - withRetry 적용
+    const response = await withRetry(() =>
+      notion.dataSources.query({
+        data_source_id: dataSourceId,
+        filter: {
+          property: "Published",
+          checkbox: { equals: true },
         },
-      ],
-      page_size: 100,
-    });
+        sorts: [
+          {
+            property: "PublishedAt",
+            direction: "descending",
+          },
+        ],
+        page_size: 100,
+      })
+    );
 
     console.log(`[Notion API] 응답 받음. 결과 개수: ${response.results?.length || 0}`);
 
@@ -314,13 +352,15 @@ export async function getPostBlocks(pageId: string): Promise<NotionBlock[]> {
     const blocks: NotionBlock[] = [];
     let cursor: string | undefined = undefined;
 
-    // 페이지의 모든 블록 조회 (페이지네이션 처리)
+    // 페이지의 모든 블록 조회 (페이지네이션 처리) - withRetry 적용
     while (true) {
-      const response: any = await (notion.blocks.children as any).list({
-        block_id: pageId,
-        page_size: 100,
-        start_cursor: cursor,
-      });
+      const response: any = await withRetry(() =>
+        (notion.blocks.children as any).list({
+          block_id: pageId,
+          page_size: 100,
+          start_cursor: cursor,
+        })
+      );
 
       for (const block of response.results) {
         const blockData = block as any;
