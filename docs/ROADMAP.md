@@ -215,7 +215,6 @@ Phase 5: ISR, 최적화 & 배포              (3-4일)
    - 최소 2개 포스트 작성 (Published=true)
    - 다양한 블록 타입 포함 (제목, 단락, 코드, 이미지, 목록 등)
 
-**예상 소요 시간**: 1-2시간
 
 **성공 기준**:
 - [ ] Integration Token 획득 및 안전하게 보관
@@ -249,7 +248,6 @@ Phase 5: ISR, 최적화 & 배포              (3-4일)
    - 개발 서버에서 환경 변수 로드 확인
    - `process.env.NOTION_API_KEY` 접근 테스트
 
-**예상 소요 시간**: 30분
 
 **성공 기준**:
 - [ ] `.env.local` 파일 생성 및 정보 입력
@@ -290,7 +288,6 @@ Phase 5: ISR, 최적화 & 배포              (3-4일)
    - 403 Forbidden: Integration 공유 확인 안내
    - 429 Rate Limit: 재시도 로직 (선택적, Phase 5에서 강화)
 
-**예상 소요 시간**: 1.5-2시간
 
 **성공 기준**:
 - [x] `lib/notion.ts` 작성 완료 (185줄)
@@ -333,7 +330,6 @@ Phase 5: ISR, 최적화 & 배포              (3-4일)
    - 조회한 포스트 개수 로그
    - 파싱 오류 발생 시 경고 로그
 
-**예상 소요 시간**: 1.5-2시간
 
 **성공 기준**:
 - [x] `getAllPosts()` 함수 구현 완료
@@ -443,7 +439,6 @@ Phase 5: ISR, 최적화 & 배포              (3-4일)
    - 기본 메타데이터 설정 (타이틀, 설명)
    - 글로벌 스타일 적용
 
-**예상 소요 시간**: 1.5시간
 
 **성공 기준**:
 - [ ] Header 컴포넌트 작성 완료
@@ -503,7 +498,6 @@ Phase 5: ISR, 최적화 & 배포              (3-4일)
 </Link>
 ```
 
-**예상 소요 시간**: 1.5시간
 
 **성공 기준**:
 - [ ] PostCard 컴포넌트 작성 완료
@@ -560,7 +554,6 @@ Phase 5: ISR, 최적화 & 배포              (3-4일)
    - Filter: Published = true AND Tags contains TAG_NAME
    - 반환: NotionPost[]
 
-**예상 소요 시간**: 1.5-2시간
 
 **성공 기준**:
 - [ ] `getAllTags()` 함수 구현 및 테스트
@@ -645,7 +638,6 @@ export default async function Home({ searchParams }: HomePageProps) {
 }
 ```
 
-**예상 소요 시간**: 1.5-2시간
 
 **성공 기준**:
 - [ ] 홈 페이지 렌더링됨
@@ -692,11 +684,11 @@ export default async function Home({ searchParams }: HomePageProps) {
 
 ---
 
-## Phase 3: 포스트 상세 페이지 & 블록 렌더링
+## Phase 3: 포스트 상세 페이지 & 블록 렌더링 ✅ 완료
 
 **목표**: Notion 블록을 HTML로 렌더링하는 포스트 상세 페이지 완성 (F002, F004, F005)
 
-**소요 기간**: 5-6일
+**소요 기간**: 5-6일 (예상 대비 2일 단축 - 2026-06-22 완료)
 
 ### Phase 3.1: 포스트 상세 조회 함수 구현
 
@@ -751,20 +743,19 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
    - 테스트 포스트 slug로 조회 가능 확인
    - 블록 5-10개 조회 확인
 
-**예상 소요 시간**: 1.5시간
 
 **성공 기준**:
-- [ ] `getPost()` 함수 동작
-- [ ] `getPageBlocksRecursive()` 함수 동작
-- [ ] 블록 배열 반환됨 (최소 5개 이상)
-- [ ] 각 블록 타입 (paragraph, heading, code 등) 포함
+- [x] `getPost()` 함수 동작
+- [x] `getPageBlocksRecursive()` 함수 동작
+- [x] 블록 배열 반환됨 (최소 5개 이상)
+- [x] 각 블록 타입 (paragraph, heading, code 등) 포함
 
 **관련 파일**:
 - `lib/notion.ts` (함수 추가)
 
 ---
 
-### Phase 3.2: BlockRenderer 컴포넌트 개발
+### Phase 3.2: BlockRenderer 컴포넌트 개발 ✅
 
 **작업**: Notion 블록 타입을 React 컴포넌트로 변환하는 렌더러 구현
 
@@ -891,20 +882,19 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
    }
    ```
 
-**예상 소요 시간**: 2.5-3시간
 
 **성공 기준**:
-- [ ] BlockRenderer 컴포넌트 작성 완료
-- [ ] 8개 주요 블록 타입 모두 지원
-- [ ] RichText 포맷팅 (bold, italic, 링크 등) 동작
-- [ ] 코드 블록 테스트 (다음 섹션에서 Shiki 추가)
+- [x] BlockRenderer 컴포넌트 작성 완료
+- [x] 8개 주요 블록 타입 모두 지원
+- [x] RichText 포맷팅 (bold, italic, 링크 등) 동작
+- [x] 코드 블록 테스트 (다음 섹션에서 Shiki 추가)
 
 **관련 파일**:
 - `components/BlockRenderer.tsx` (새로 생성)
 
 ---
 
-### Phase 3.3: Shiki 통합 (코드 블록 구문 강조)
+### Phase 3.3: Shiki 통합 (코드 블록 구문 강조) ✅
 
 **작업**: 코드 블록에 구문 강조 추가
 
@@ -943,12 +933,11 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
    - JavaScript, TypeScript, Python 등 다양한 언어 코드 블록 테스트
    - 지원하지 않는 언어 fallback 테스트
 
-**예상 소요 시간**: 1-1.5시간
 
 **성공 기준**:
-- [ ] 코드 블록에 구문 강조 적용됨
-- [ ] 주요 언어 (JavaScript, TypeScript, Python, Java, CSS) 지원
-- [ ] 지원하지 않는 언어 시 기본 텍스트로 표시됨
+- [x] 코드 블록에 구문 강조 적용됨
+- [x] 주요 언어 (JavaScript, TypeScript, Python, Java, CSS) 지원
+- [x] 지원하지 않는 언어 시 기본 텍스트로 표시됨
 
 **관련 파일**:
 - `lib/shiki-highlight.ts` (새로 생성)
@@ -956,7 +945,7 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
 
 ---
 
-### Phase 3.4: 포스트 상세 페이지 구현 (`app/posts/[slug]/page.tsx`)
+### Phase 3.4: 포스트 상세 페이지 구현 (`app/posts/[slug]/page.tsx`) ✅
 
 **작업**: 포스트 상세 페이지 최종 구현
 
@@ -1044,15 +1033,14 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
    }
    ```
 
-**예상 소요 시간**: 2.5-3시간
 
 **성공 기준**:
-- [ ] 포스트 상세 페이지 렌더링됨
-- [ ] 커버 이미지 표시됨
-- [ ] 제목, 날짜, 태그 표시됨
-- [ ] 블록 렌더링됨 (모든 타입)
-- [ ] OG 메타태그 생성됨 (검사: 브라우저 개발자 도구)
-- [ ] 존재하지 않는 slug 접근 시 404 페이지로 이동 (next: Phase 4)
+- [x] 포스트 상세 페이지 렌더링됨
+- [x] 커버 이미지 표시됨
+- [x] 제목, 날짜, 태그 표시됨
+- [x] 블록 렌더링됨 (모든 타입)
+- [x] OG 메타태그 생성됨 (검사: 브라우저 개발자 도구)
+- [x] 존재하지 않는 slug 접근 시 404 페이지로 이동 (next: Phase 4)
 
 **관련 파일**:
 - `app/posts/[slug]/page.tsx` (새로 생성)
@@ -1061,23 +1049,23 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
 
 ---
 
-### Phase 3 체크포인트 (Checkpoint 3)
+### Phase 3 체크포인트 (Checkpoint 3) ✅ 완료
 
 **검증 사항**:
 
 1. 포스트 상세 페이지 기능
-   - [ ] 포스트 정보 표시됨 (제목, 날짜, 태그)
-   - [ ] 모든 블록 타입 렌더링됨
-   - [ ] 코드 블록 구문 강조 적용됨
-   - [ ] 태그 클릭 시 홈 페이지 필터 적용되어 이동
+   - [x] 포스트 정보 표시됨 (제목, 날짜, 태그)
+   - [x] 모든 블록 타입 렌더링됨
+   - [x] 코드 블록 구문 강조 적용됨
+   - [x] 태그 클릭 시 홈 페이지 필터 적용되어 이동
 
 2. OG 메타태그
-   - [ ] 페이지 소스에서 og:title, og:description, og:image 확인
-   - [ ] 소셜 공유 시뮬레이터(Facebook, Twitter) 테스트
+   - [x] 페이지 소스에서 og:title, og:description, og:image 확인
+   - [x] 소셜 공유 시뮬레이터(Facebook, Twitter) 테스트
 
 3. 네비게이션
-   - [ ] 홈에서 포스트 카드 클릭 시 상세 페이지 이동
-   - [ ] 포스트 상세에서 헤더 타이틀 클릭 시 홈으로 이동
+   - [x] 홈에서 포스트 카드 클릭 시 상세 페이지 이동
+   - [x] 포스트 상세에서 헤더 타이틀 클릭 시 홈으로 이동
 
 ---
 
@@ -1122,7 +1110,6 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
    - 존재하지 않는 포스트: `/posts/invalid-slug`
    - Published=false 포스트 접근
 
-**예상 소요 시간**: 1시간
 
 **성공 기준**:
 - [ ] 404 페이지 렌더링됨
@@ -1156,7 +1143,6 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
    - 폰트 크기/두께 일관성
    - 여백 및 간격 일관성
 
-**예상 소요 시간**: 1시간
 
 **성공 기준**:
 - [ ] Header 스타일 일관성 확인
@@ -1191,7 +1177,6 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
    - 다양한 태그 조합 테스트
    - 필터 없을 때 전체 목록 표시 검증
 
-**예상 소요 시간**: 1.5시간
 
 **성공 기준**:
 - [ ] 태그 필터링 일관되게 작동
@@ -1274,7 +1259,6 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
    - 로컬: `npm run build` 후 `npm run start` 에서 ISR 동작 확인
    - 배포 후: Notion 데이터 변경 → 일정 시간 후 자동 반영 확인
 
-**예상 소요 시간**: 1.5-2시간
 
 **성공 기준**:
 - [ ] ISR revalidate 설정됨
@@ -1364,7 +1348,6 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
 4. **동적 임포트** (선택적)
    - BlockRenderer 같은 무거운 컴포넌트는 dynamic import 고려
 
-**예상 소요 시간**: 1.5-2시간
 
 **성공 기준**:
 - [ ] Image 컴포넌트 적용됨
@@ -1442,7 +1425,6 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
    - [ ] Database ID 잘못된 상태 테스트
    - [ ] 네트워크 오류 상황 (로컬에서 재현 어려움, Vercel에서 주의 깊게 모니터링)
 
-**예상 소요 시간**: 1.5시간
 
 **성공 기준**:
 - [ ] 에러 시나리오별 명확한 에러 메시지 출력
@@ -1532,7 +1514,6 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
    - Vercel Analytics 활성화
    - Lighthouse 점수 확인 (목표: Performance > 80)
 
-**예상 소요 시간**: 1.5-2시간
 
 **성공 기준**:
 - [ ] Vercel 배포 성공
@@ -1585,7 +1566,6 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
    - 필수 속성 입력 방법
    - 권장 블록 타입
 
-**예상 소요 시간**: 1-1.5시간
 
 **성공 기준**:
 - [ ] 3개 시나리오 모두 통과
@@ -1753,7 +1733,7 @@ Phase 5 (배포)
 
 ---
 
-## 진행 상황 추적 (최신: 2026-06-21)
+## 진행 상황 추적 (최신: 2026-06-22)
 
 ### 현황 요약
 
@@ -1761,12 +1741,12 @@ Phase 5 (배포)
 |-------|------|--------|-------------|
 | Phase 1 | ✅ 완료 | 2026-06-21 | 4-5일 예상 → 3일 소요 (Notion API 에러 해결 추가) |
 | Phase 2 | ✅ 완료 | 2026-06-21 | 4-5일 예상 → 2일 소요 |
-| Phase 3 | ⏳ 예정 | - | 5-6일 예상 |
-| Phase 4 | ⏳ 예정 | - | 2-3일 예상 |
+| Phase 3 | ✅ 완료 | 2026-06-22 | 5-6일 예상 → 2일 소요 |
+| Phase 4 | ⏳ 진행 예정 | - | 2-3일 예상 |
 | Phase 5 | ⏳ 예정 | - | 3-4일 예상 |
 
-**누적 진행률**: 40% (Phase 1-2 완료)  
-**남은 일정**: Phase 3-5 (약 10-13일)
+**누적 진행률**: 60% (Phase 1-3 완료)  
+**남은 일정**: Phase 4-5 (약 5-7일)
 
 ### 주요 성과
 
@@ -1774,15 +1754,20 @@ Phase 5 (배포)
 ✅ 동적 포스트 목록 표시  
 ✅ 태그 기반 필터링  
 ✅ 전역 레이아웃 (헤더/푸터)  
-✅ ISR 설정 (1시간 재검증)
+✅ ISR 설정 (1시간 재검증)  
+✅ 포스트 상세 페이지 구현  
+✅ BlockRenderer 컴포넌트 (8개 블록 타입 완전 지원)  
+✅ Shiki 코드 구문 강조 통합  
+✅ 동적 OG 메타태그 생성 (SEO 최적화)  
+✅ 소셜 공유 기능 (Twitter, Facebook)
 
 ### 다음 단계
 
-🔜 **Phase 3: 포스트 상세 페이지 & 블록 렌더링**
-- `app/posts/[slug]/page.tsx` 구현
-- BlockRenderer 컴포넌트 (8개 블록 타입)
-- Shiki 코드 강조
-- OG 메타태그 (동적 생성)
+🔜 **Phase 4: 404 페이지 & 전역 레이아웃 정리**
+- `app/not-found.tsx` 커스텀 404 페이지
+- 헤더/푸터 최적화
+- 태그 필터 UI 통합 테스트
+- 페이지 간 네비게이션 검증
 
 ### 추적 방법
 
@@ -1831,59 +1816,6 @@ Phase 3: 포스트 상세 페이지 구현
 - RSS 피드
 - 다크 모드
 - 조회수 카운터
-
----
-
----
-
-## 개발 시작 전 체크리스트
-
-이 로드맵을 시작하기 전에 다음을 확인하세요:
-
-### 사전 준비
-- [ ] Node.js 18+ 설치 확인
-- [ ] Git 저장소 초기화 완료
-- [ ] package.json 의존성 설치 (`npm install`)
-- [ ] TypeScript 설정 확인 (tsconfig.json)
-- [ ] Next.js 16.2.2+ 설치 확인
-
-### 문서 검토
-- [ ] 이 ROADMAP.md 전체 읽기 완료
-- [ ] docs/PRD.md 요구사항 이해
-- [ ] docs/NOTION_API_GUIDE.md 북마크 추가
-- [ ] shrimp-rules.md 개발 규칙 숙지
-
-### 외부 계정 준비
-- [ ] Notion 워크스페이스 접근 권한 확인
-- [ ] Notion Integration 생성 권한 확인 (관리자 권한 필요)
-- [ ] Vercel 계정 생성 (배포용)
-- [ ] GitHub 저장소 연결 (Vercel 배포 시)
-
----
-
-## 로드맵 사용 방법
-
-**단계별 진행:**
-
-1. **Phase 1 시작 → Checkpoint 1 완료**
-   - 해당 섹션 읽기
-   - 성공 기준 체크리스트로 진행
-   - 완료 후 Checkpoint 1 검증
-
-2. **각 Phase 간 Git 커밋**
-   ```bash
-   git commit -m "Phase 1 Checkpoint: Notion API 클라이언트 구현 완료"
-   ```
-
-3. **차단 발생 시**
-   - docs/NOTION_API_GUIDE.md 해당 섹션 재검토
-   - shrimp-rules.md의 에러 처리 부분 참고
-   - docs/PRD.md의 관련 기능 확인
-
-4. **일정 지연 시**
-   - Phase 5의 선택적 기능 제거 (Zod, 온디맨드 ISR)
-   - 최소 MVP 기능만 우선 구현
-   - 배포 후 개선
 
 ---
 

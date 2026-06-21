@@ -1,70 +1,62 @@
-// 포스트 상세 페이지
-// 동적 라우트: /posts/[slug]
-// generateStaticParams로 빌드 시 정적 생성, ISR로 최신 상태 유지
-
+import { getPostBySlug, getPostBlocks } from "@/lib/notion";
+import { BlockRenderer } from "@/components/BlockRenderer";
 import { notFound } from "next/navigation";
-import Image from "next/image";
+import { Metadata } from "next";
 import Link from "next/link";
-import type { Metadata } from "next";
-import { getPublishedPosts, getPostBySlug, getPostBlocks } from "@/lib/notion";
-import { NotionRenderer } from "@/components/blog/NotionRenderer";
-import { Badge } from "@/components/ui/badge";
 
-// ISR 재검증 주기: 1시간
 export const revalidate = 3600;
 
 interface PostPageProps {
   params: Promise<{ slug: string }>;
 }
 
-/**
- * 빌드 시 정적 경로 생성
- * 모든 Published 포스트의 slug를 미리 생성합니다.
- * Notion API 미설정 시 빈 배열 반환 (ISR로 런타임 생성)
- */
-export async function generateStaticParams() {
-  try {
-    const posts = await getPublishedPosts();
-    return posts.map((post) => ({ slug: post.slug }));
-  } catch {
-    // 빌드 시점에 Notion API 미설정이면 빈 배열 반환
-    // 요청 시 ISR로 페이지가 동적 생성됩니다.
-    return [];
-  }
-}
-
-/**
- * 동적 OG 메타태그 생성
- * 포스트 제목, 요약, 커버 이미지를 사용합니다.
- */
-export async function generateMetadata({
-  params,
-}: PostPageProps): Promise<Metadata> {
+export async function generateMetadata(
+  { params }: PostPageProps
+): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
 
   if (!post) {
-    return { title: "포스트를 찾을 수 없습니다" };
+    return {
+      title: "포스트를 찾을 수 없습니다",
+      description: "요청하신 포스트를 찾을 수 없습니다."
+    };
   }
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://example.com";
+  const postUrl = `${siteUrl}/posts/${slug}`;
+  const description = post.excerpt || post.title;
+
   return {
-    title: post.title,
-    description: post.excerpt || undefined,
+    title: `${post.title} | My Blog`,
+    description,
+    keywords: [...post.tags, "블로그", "개발"],
+    canonical: postUrl,
     openGraph: {
       title: post.title,
-      description: post.excerpt || undefined,
+      description,
       type: "article",
-      publishedTime: post.publishedAt
-        ? new Date(post.publishedAt).toISOString()
-        : undefined,
+      url: postUrl,
+      publishedTime: post.publishedAt.toISOString(),
+      authors: ["My Blog"],
       tags: post.tags,
       ...(post.coverImage && {
         images: [
           {
             url: post.coverImage,
+            width: 1200,
+            height: 630,
             alt: post.title,
           },
         ],
+      }),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description,
+      ...(post.coverImage && {
+        images: [post.coverImage],
       }),
     },
   };
@@ -72,91 +64,134 @@ export async function generateMetadata({
 
 export default async function PostPage({ params }: PostPageProps) {
   const { slug } = await params;
-
-  // 포스트 메타데이터 조회
   const post = await getPostBySlug(slug);
 
-  // 미게시 또는 존재하지 않는 포스트 → 404
   if (!post) {
     notFound();
   }
 
-  // 포스트 본문 블록 조회
+  if (!post.isPublished) {
+    notFound();
+  }
+
   const blocks = await getPostBlocks(post.id);
 
-  // 게시 날짜 포맷
-  const formattedDate = post.publishedAt
-    ? new Intl.DateTimeFormat("ko-KR", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }).format(new Date(post.publishedAt))
-    : null;
-
   return (
-    <article className="container mx-auto max-w-3xl px-4 py-10">
-      {/* 뒤로 가기 */}
-      <Link
-        href="/"
-        className="mb-8 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        ← 목록으로
-      </Link>
-
-      {/* 커버 이미지 히어로 */}
+    <article className="container mx-auto max-w-3xl px-4 py-12">
+      {/* 커버 이미지 */}
       {post.coverImage && (
-        <div className="relative mb-8 aspect-video w-full overflow-hidden rounded-xl">
-          <Image
+        <div className="mb-8 -mx-4 md:mx-0 md:rounded-lg overflow-hidden bg-gray-200">
+          <img
             src={post.coverImage}
             alt={post.title}
-            fill
-            className="object-cover"
-            priority
-            sizes="(max-width: 768px) 100vw, 768px"
+            className="w-full h-96 object-cover"
+            loading="eager"
           />
         </div>
       )}
 
-      {/* 포스트 메타정보 */}
-      <header className="mb-8">
+      {/* 포스트 헤더 */}
+      <header className="mb-12">
+        {/* 제목 */}
+        <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+          {post.title}
+        </h1>
+
+        {/* 메타정보 */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 pb-6 border-b border-gray-200">
+          <time
+            dateTime={post.publishedAt.toISOString()}
+            className="text-sm text-gray-600"
+          >
+            {new Intl.DateTimeFormat("ko-KR", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            }).format(post.publishedAt)}
+          </time>
+
+          <div className="text-sm text-gray-500 mt-2 md:mt-0">
+            읽기 시간: ~5분
+          </div>
+        </div>
+
         {/* 태그 */}
         {post.tags.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 mb-6">
             {post.tags.map((tag) => (
-              <Link key={tag} href={`/?tag=${encodeURIComponent(tag)}`}>
-                <Badge variant="secondary" className="cursor-pointer hover:bg-primary hover:text-primary-foreground">
-                  #{tag}
-                </Badge>
+              <Link
+                key={tag}
+                href={`/?tag=${encodeURIComponent(tag)}`}
+                className="inline-block px-3 py-1 text-xs font-semibold bg-blue-50 text-blue-700 rounded-full hover:bg-blue-100 transition"
+              >
+                #{tag}
               </Link>
             ))}
           </div>
         )}
 
-        {/* 제목 */}
-        <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
-          {post.title}
-        </h1>
-
-        {/* 날짜 */}
-        {formattedDate && (
-          <time
-            dateTime={
-              post.publishedAt
-                ? new Date(post.publishedAt).toISOString().split("T")[0]
-                : undefined
-            }
-            className="mt-3 block text-sm text-muted-foreground"
-          >
-            {formattedDate}
-          </time>
+        {/* 요약 */}
+        {post.excerpt && (
+          <p className="text-lg text-gray-600 italic leading-relaxed">
+            {post.excerpt}
+          </p>
         )}
       </header>
 
-      {/* 구분선 */}
-      <hr className="mb-8 border-border" />
+      {/* 포스트 본문 */}
+      <main className="prose prose-sm md:prose-base max-w-none mb-12">
+        {blocks.length > 0 ? (
+          blocks.map((block) => (
+            <BlockRenderer key={block.id} block={block} />
+          ))
+        ) : (
+          <p className="text-gray-500 text-center py-8">
+            포스트 내용이 없습니다.
+          </p>
+        )}
+      </main>
 
-      {/* 본문 */}
-      <NotionRenderer blocks={blocks} />
+      {/* 포스트 푸터 */}
+      <footer className="mt-16 pt-8 border-t border-gray-200">
+        <div className="mb-8">
+          <Link
+            href="/"
+            className="inline-flex items-center text-blue-600 hover:text-blue-700 transition font-medium"
+          >
+            <span className="mr-2">←</span>
+            목록으로 돌아가기
+          </Link>
+        </div>
+
+        {/* 관련 포스트 네비게이션 (선택적) */}
+        <div className="text-xs text-gray-500">
+          <p>공유하기:</p>
+          <div className="flex gap-3 mt-2">
+            <a
+              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                post.title
+              )}&url=${encodeURIComponent(
+                `${process.env.NEXT_PUBLIC_SITE_URL || "https://example.com"}/posts/${post.slug}`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-600 transition"
+            >
+              Twitter
+            </a>
+            <a
+              href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                `${process.env.NEXT_PUBLIC_SITE_URL || "https://example.com"}/posts/${post.slug}`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 transition"
+            >
+              Facebook
+            </a>
+          </div>
+        </div>
+      </footer>
     </article>
   );
 }
