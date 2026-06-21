@@ -57,8 +57,8 @@ function RichText({ richText }: { richText: NotionRichText[] }) {
 
 /** 단일 블록을 렌더링 */
 function Block({ block }: { block: NotionBlock }) {
-  const { type } = block;
-  const blockData = block[type];
+  const { type, content } = block;
+  const blockData = (content as Record<string, any>)[type];
 
   if (!blockData) return null;
 

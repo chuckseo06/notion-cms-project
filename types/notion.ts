@@ -12,6 +12,24 @@ export interface NotionPost {
   isPublished: boolean;
 }
 
+// Notion 리치 텍스트 (포맷팅 정보 포함)
+export interface NotionRichText {
+  plain_text: string;
+  href?: string | null;
+  annotations: {
+    bold: boolean;
+    italic: boolean;
+    strikethrough: boolean;
+    underline: boolean;
+    code: boolean;
+    color: string;
+  };
+  text?: {
+    content: string;
+    link?: { url: string } | null;
+  };
+}
+
 // Notion 블록 (포스트 본문)
 export interface NotionBlock {
   id: string;

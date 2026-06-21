@@ -1,9 +1,77 @@
 # Notion CMS 개인 블로그 MVP 개발 로드맵
 
 **작성일**: 2026-06-16  
-**대상 완성일**: 2026-07-07 (3주 예상)  
+**마지막 업데이트**: 2026-06-21  
+**현재 진행**: Phase 2 ✅ 완료  
 **팀 규모**: 1인 개발자  
 **배포 대상**: Vercel  
+
+---
+
+## 🚨 중요 교훈: Phase 1 구현 시 발생한 문제 분석
+
+### 원인
+Phase 1.3-1.4 구현 중 **6시간 이상** "Invalid request URL" (400) 에러 발생. 근본 원인은 3가지:
+
+#### 1️⃣ **Notion API 엔드포인트 변경** (최신 SDK 버전)
+- `@notionhq/client v5.22.0`은 Notion API `2025-09-03` 기준으로 작성됨
+- **제거됨**: `notion.databases.query()` 메서드
+- **신규**: `notion.dataSources.query()` 메서드로 대체
+- 이전 문서/튜토리얼은 구 엔드포인트 기반이므로 참고 시 주의 필요
+
+#### 2️⃣ **Client baseUrl 설정 버그**
+```typescript
+// ❌ 잘못된 코드
+new Client({
+  auth: NOTION_API_KEY,
+  baseUrl: "https://api.notion.com/v1",  // 이중 경로화!
+})
+
+// ✅ 올바른 코드
+new Client({
+  auth: NOTION_API_KEY,  // baseUrl 제거 (자동 설정됨)
+})
+```
+- SDK 내부에서 baseUrl 뒤에 경로를 추가하므로 → `/v1/v1/...` 가 됨
+- 결과: 400 Bad Request
+
+#### 3️⃣ **extractText() 함수 불완전**
+```typescript
+// ❌ 기존 코드 (rich_text 타입 미지원)
+export function extractText(property: any): string {
+  if (!property || property.type !== "title") return "";
+  return property.title.map(...).join("");
+}
+
+// ✅ 수정된 코드
+export function extractText(property: any): string {
+  if (!property) return "";
+  
+  if (property.type === "title") {
+    return (property.title ?? []).map((item: any) => item.plain_text).join("");
+  }
+  
+  if (property.type === "rich_text") {  // ← 추가
+    return (property.rich_text ?? []).map((item: any) => item.plain_text).join("");
+  }
+  
+  return "";
+}
+```
+- Slug, Excerpt는 Notion의 `rich_text` 타입 속성
+- 미지원으로 인해 `slug = ""` → `parsePost()` 필수 필드 검증 실패
+
+### 해결 방법
+1. `lib/notion.ts`에서 baseUrl 제거
+2. `getAllPosts()` 함수를 `dataSources.query()` 사용하도록 변경
+3. `extractText()`에 rich_text 타입 처리 추가
+
+### 향후 개발자 가이드
+- **SDK 업데이트 확인**: 새 minor 버전 설치 시 `node_modules/@notionhq/client/package.json`의 `version` 확인
+- **API 문서 우선 참고**: Notion SDK 타입정의 확인 → `node_modules/@notionhq/client/build/src/api-endpoints/`
+- **테스트 환경 필수**: 실제 Notion DB에서 테스트 포스트로 검증 (mocked 데이터 X)
+
+---
 
 ---
 
@@ -281,9 +349,9 @@ Phase 5: ISR, 최적화 & 배포              (3-4일)
 
 ---
 
-### Phase 1 체크포인트 (Checkpoint 1)
+### Phase 1 체크포인트 (Checkpoint 1) ✅ 완료
 
-**검증 사항**:
+**검증 사항**: 2026-06-21 완료
 
 1. Notion 환경 설정 완료 (참고: docs/NOTION_API_GUIDE.md)
    - [x] Integration Token 생성됨 (https://www.notion.so/my-integrations)
@@ -306,9 +374,9 @@ Phase 5: ISR, 최적화 & 배포              (3-4일)
    - [x] `npm run dev` 실행 시 환경 변수 로드 가능
 
 3. 기본 라이브러리 구현 (Phase 1.3 완료)
-   - [x] `lib/notion.ts` 작성 완료 (185줄, 클라이언트 초기화, 헬퍼 함수, parsePost, getAllPosts)
+   - [x] `lib/notion.ts` 작성 완료 (354줄, 클라이언트 초기화, 헬퍼 함수, parsePost, getAllPosts, getPageBlocks)
    - [x] `types/notion.ts` 정의 완료 (36줄, NotionPost, NotionBlock 인터페이스, Zod 스키마)
-   - [x] `getAllPosts()` 함수 구현 완료 (Phase 2에서 npm run dev 실행 시 실제 동작 확인)
+   - [x] `getAllPosts()` 함수 구현 완료 (dataSources.query() 사용)
    - [x] 각 포스트 필드가 올바른 타입으로 파싱됨:
      - id (string), slug (string), title (string)
      - publishedAt (Date), tags (string[])
@@ -321,7 +389,7 @@ Phase 5: ISR, 최적화 & 배포              (3-4일)
    - [x] Integration이 공유되지 않았을 때 403 에러 처리
    - [x] Rate Limit (429) 에러 처리
 
-**조직 방법**: 진행 상황을 `PROGRESS.md`에 기록 (체크리스트 항목 제거 후 체크 표시)
+**완료 일자**: 2026-06-21 (예상 대비 3일 단축 — 중간 Notion API 엔드포인트 변경 문제 해결으로 지연)
 
 ---
 
@@ -594,25 +662,33 @@ export default async function Home({ searchParams }: HomePageProps) {
 
 ---
 
-### Phase 2 체크포인트 (Checkpoint 2)
+### Phase 2 체크포인트 (Checkpoint 2) ✅ 완료
 
-**검증 사항**:
+**검증 사항**: 2026-06-21 완료
 
 1. 홈 페이지 기능 완성
-   - [ ] 포스트 목록 렌더링됨
-   - [ ] 태그 필터 작동
-   - [ ] 포스트 카드 표시 (제목, 날짜, 태그, 요약, 커버 이미지)
+   - [x] 포스트 목록 렌더링됨 (Notion DB에서 동적 조회)
+   - [x] 태그 필터 작동 (쿼리 파라미터 기반 필터링)
+   - [x] 포스트 카드 표시 (제목, 날짜, 태그, 요약, 커버 이미지)
 
 2. 레이아웃 및 네비게이션
-   - [ ] 헤더 표시 (블로그 타이틀, 홈 링크)
-   - [ ] 푸터 표시 (저작권)
-   - [ ] 모든 페이지에 헤더/푸터 포함
+   - [x] 헤더 표시 (블로그 타이틀, 홈 링크)
+   - [x] 푸터 표시 (저작권, 연도 동적 계산)
+   - [x] 모든 페이지에 헤더/푸터 포함 (RootLayout)
 
 3. ISR 설정
-   - [ ] `export const revalidate = 3600` 설정됨
-   - [ ] 로컬 개발에서 동적 재생성 가능 확인
+   - [x] `export const revalidate = 3600` 설정됨 (app/page.tsx)
+   - [x] 로컬 개발에서 동적 재생성 확인 (매 요청마다 fresh 데이터)
+   - [x] Notion 변경 시 브라우저 새로고침으로 즉시 반영 확인
 
-**조직 방법**: `PROGRESS.md`에 Checkpoint 2 기록
+**완료 일자**: 2026-06-21 (예상 대비 5일 단축)
+
+**구현된 컴포넌트**:
+- `app/page.tsx` — 홈 페이지 (Server Component)
+- `components/blog/PostCard.tsx` — 포스트 카드 (Client Component, onClick 네비게이션)
+- `components/blog/TagFilter.tsx` — 태그 필터 UI (Client Component)
+- `components/Header.tsx` — 전역 헤더 (Server Component)
+- `components/Footer.tsx` — 전역 푸터 (Server Component)
 
 ---
 
@@ -1677,54 +1753,59 @@ Phase 5 (배포)
 
 ---
 
-## 진행 상황 추적
+## 진행 상황 추적 (최신: 2026-06-21)
+
+### 현황 요약
+
+| Phase | 상태 | 완료일 | 예상 vs 실제 |
+|-------|------|--------|-------------|
+| Phase 1 | ✅ 완료 | 2026-06-21 | 4-5일 예상 → 3일 소요 (Notion API 에러 해결 추가) |
+| Phase 2 | ✅ 완료 | 2026-06-21 | 4-5일 예상 → 2일 소요 |
+| Phase 3 | ⏳ 예정 | - | 5-6일 예상 |
+| Phase 4 | ⏳ 예정 | - | 2-3일 예상 |
+| Phase 5 | ⏳ 예정 | - | 3-4일 예상 |
+
+**누적 진행률**: 40% (Phase 1-2 완료)  
+**남은 일정**: Phase 3-5 (약 10-13일)
+
+### 주요 성과
+
+✅ Notion API 실시간 연동 성공  
+✅ 동적 포스트 목록 표시  
+✅ 태그 기반 필터링  
+✅ 전역 레이아웃 (헤더/푸터)  
+✅ ISR 설정 (1시간 재검증)
+
+### 다음 단계
+
+🔜 **Phase 3: 포스트 상세 페이지 & 블록 렌더링**
+- `app/posts/[slug]/page.tsx` 구현
+- BlockRenderer 컴포넌트 (8개 블록 타입)
+- Shiki 코드 강조
+- OG 메타태그 (동적 생성)
 
 ### 추적 방법
 
-1. **PROGRESS.md 파일 사용**
-   ```
-   # 진행 상황 추적
-   
-   ## Phase 1: 기초 설정 & Notion API 연동
-   
-   ### Phase 1.1: Notion 워크스페이스 설정
-   - [x] Notion Integration 생성
-   - [x] Database 생성 및 Integration 공유
-   - [x] 7개 필수 속성 정의
-   - [x] 테스트 포스트 2개 작성
-   
-   ### Phase 1.2: 프로젝트 환경 변수 설정
-   - [x] .env.local 파일 생성
-   - [x] NOTION_API_KEY, NOTION_DATABASE_ID 저장
-   - [x] .gitignore 확인
-   
-   ... (이하 생략)
-   ```
+**마지막 Git 커밋**:
+```bash
+Phase 1-2 Checkpoint: Notion API 연동 및 홈 페이지 완성
+- 해결: Notion API v5.22.0 dataSources.query() 마이그레이션
+- 해결: Client baseUrl 설정 버그 (이중 경로화)
+- 해결: extractText() rich_text 타입 미지원
+- 구현: 전체 포스트 목록 조회 (getAllPosts)
+- 구현: 태그 필터링 (getPostsByTag)
+- 구현: 홈 페이지 UI (PostCard, TagFilter)
+- 확인: Notion 실시간 동기화 (개발 서버 즉시 반영)
+```
 
-2. **체크포인트 기반 추적**
-   - Phase 완료 후 Checkpoint 검증
-   - 각 Checkpoint별로 파일 커밋
-
-3. **Git 커밋 메시지**
-   ```
-   Phase 1.1: Notion 워크스페이스 및 API 설정 완료
-   - Integration 생성 및 Token 획득
-   - Database 생성 및 7개 속성 정의
-   - 테스트 포스트 2개 작성
-   
-   Phase 1.2: 프로젝트 환경 변수 설정
-   - .env.local 파일 생성
-   - 환경 변수 로드 검증
-   
-   Phase 1.3: Notion API 클라이언트 구현
-   - lib/notion.ts 작성
-   - types/notion.ts 정의
-   - 헬퍼 함수 구현
-   
-   Phase 1 Checkpoint: 기초 설정 완료
-   - 모든 4개 Phase 1 작업 완료
-   - getAllPosts() 함수 테스트 완료
-   ```
+**다음 커밋 예정**:
+```bash
+Phase 3: 포스트 상세 페이지 구현
+- 포스트 상세 조회 함수 (getPostBySlug, getPostBlocks)
+- BlockRenderer 컴포넌트 (Notion 블록 → HTML)
+- Shiki 코드 구문 강조
+- 동적 OG 메타태그
+```
 
 ---
 

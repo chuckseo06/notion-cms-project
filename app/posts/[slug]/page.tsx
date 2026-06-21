@@ -54,7 +54,9 @@ export async function generateMetadata({
       title: post.title,
       description: post.excerpt || undefined,
       type: "article",
-      publishedTime: post.publishedAt ?? undefined,
+      publishedTime: post.publishedAt
+        ? new Date(post.publishedAt).toISOString()
+        : undefined,
       tags: post.tags,
       ...(post.coverImage && {
         images: [
@@ -138,7 +140,11 @@ export default async function PostPage({ params }: PostPageProps) {
         {/* 날짜 */}
         {formattedDate && (
           <time
-            dateTime={post.publishedAt ?? undefined}
+            dateTime={
+              post.publishedAt
+                ? new Date(post.publishedAt).toISOString().split("T")[0]
+                : undefined
+            }
             className="mt-3 block text-sm text-muted-foreground"
           >
             {formattedDate}
