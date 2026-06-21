@@ -18,7 +18,7 @@ export default function NotFound() {
             <h1 className="text-8xl md:text-9xl font-bold text-gray-200 mb-4">
               404
             </h1>
-            <div className="h-1 w-24 bg-blue-500 mx-auto mb-8"></div>
+            <div className="h-1 w-24 bg-rose-500 mx-auto mb-8"></div>
           </div>
 
           {/* 에러 메시지 */}
@@ -35,7 +35,7 @@ export default function NotFound() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/"
-              className="inline-flex items-center justify-center px-8 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors"
+              className="inline-flex items-center justify-center px-8 py-3 bg-rose-500 text-white font-semibold rounded-lg hover:bg-rose-600 transition-colors"
             >
               <span className="mr-2">←</span>
               홈으로 돌아가기
@@ -53,7 +53,7 @@ export default function NotFound() {
           <div className="mt-12 p-6 bg-gray-50 rounded-lg border border-gray-200">
             <p className="text-sm text-gray-600">
               계속 문제가 발생하면{" "}
-              <Link href="/" className="text-blue-600 hover:underline font-semibold">
+              <Link href="/" className="text-rose-500 hover:underline font-semibold">
                 홈페이지
               </Link>
               를 방문해주세요.

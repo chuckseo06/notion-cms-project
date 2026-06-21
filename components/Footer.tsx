@@ -3,13 +3,13 @@ export function Footer() {
 
   return (
     <footer className="border-t border-gray-200 bg-gray-50 mt-16">
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto max-w-4xl px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           {/* 블로거 소개 */}
           <div>
             <h3 className="font-bold text-lg mb-2 text-gray-900">About</h3>
             <p className="text-sm text-gray-600 leading-relaxed">
-              개발 관련 글을 작성하고 공유하는 개인 블로그입니다.
+              일상의 작은 순간들을 담아두는 개인 기록 공간입니다.
             </p>
           </div>
 
@@ -31,7 +31,7 @@ export function Footer() {
         <div className="border-t border-gray-200 pt-6">
           {/* 저작권 */}
           <div className="text-center text-sm text-gray-600">
-            <p>&copy; {currentYear} My Blog. All rights reserved.</p>
+            <p>&copy; {currentYear} 보석함. All rights reserved.</p>
             <p className="mt-2 text-xs text-gray-500">
               Powered by Next.js & Notion
             </p>

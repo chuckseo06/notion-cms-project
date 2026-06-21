@@ -28,9 +28,9 @@ export async function generateMetadata(
   const description = post.excerpt || post.title;
 
   return {
-    title: `${post.title} | My Blog`,
+    title: `${post.title} | 보석함`,
     description,
-    keywords: [...post.tags, "블로그", "개발"],
+    keywords: [...post.tags, "블로그", "일상"],
     canonical: postUrl,
     openGraph: {
       title: post.title,
@@ -38,7 +38,7 @@ export async function generateMetadata(
       type: "article",
       url: postUrl,
       publishedTime: post.publishedAt.toISOString(),
-      authors: ["My Blog"],
+      authors: ["보석함"],
       tags: post.tags,
       ...(post.coverImage && {
         images: [
@@ -122,7 +122,7 @@ export default async function PostPage({ params }: PostPageProps) {
               <Link
                 key={tag}
                 href={`/?tag=${encodeURIComponent(tag)}`}
-                className="inline-block px-3 py-1 text-xs font-semibold bg-blue-50 text-blue-700 rounded-full hover:bg-blue-100 transition"
+                className="inline-block px-3 py-1 text-xs font-semibold bg-rose-50 text-rose-700 rounded-full hover:bg-rose-100 transition"
               >
                 #{tag}
               </Link>
@@ -156,7 +156,7 @@ export default async function PostPage({ params }: PostPageProps) {
         <div className="mb-8">
           <Link
             href="/"
-            className="inline-flex items-center text-blue-600 hover:text-blue-700 transition font-medium"
+            className="inline-flex items-center text-rose-500 hover:text-rose-600 transition font-medium"
           >
             <span className="mr-2">←</span>
             목록으로 돌아가기
@@ -178,16 +178,6 @@ export default async function PostPage({ params }: PostPageProps) {
               className="text-blue-400 hover:text-blue-600 transition"
             >
               Twitter
-            </a>
-            <a
-              href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                `${process.env.NEXT_PUBLIC_SITE_URL || "https://example.com"}/posts/${post.slug}`
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 transition"
-            >
-              Facebook
             </a>
           </div>
         </div>

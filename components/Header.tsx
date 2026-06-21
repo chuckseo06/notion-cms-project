@@ -5,14 +5,14 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto max-w-4xl px-4 py-4">
         <div className="flex justify-between items-center">
           {/* 블로그 타이틀/로고 */}
           <Link
             href="/"
-            className="text-2xl md:text-3xl font-bold text-gray-900 hover:text-blue-600 transition-colors"
+            className="text-2xl md:text-3xl font-bold text-gray-900 hover:text-rose-500 transition-colors"
           >
-            My Blog
+            보석함
           </Link>
 
           {/* 네비게이션 (향후 확장) */}
