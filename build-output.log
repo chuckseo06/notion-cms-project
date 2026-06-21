@@ -1,0 +1,23 @@
+
+> notion-cms-blog@0.1.0 build
+> next build
+
+▲ Next.js 16.2.2 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 2.8s
+  Running TypeScript ...
+Failed to type check.
+
+./app/posts/[slug]/page.tsx:35:5
+Type error: Object literal may only specify known properties, and 'canonical' does not exist in type 'Metadata'.
+
+  [90m33 |[0m     description,
+  [90m34 |[0m     keywords: [...post.tags, [32m"블로그"[0m, [32m"일상"[0m],
+[31m[1m>[0m [90m35 |[0m     canonical: postUrl,
+  [90m   |[0m     [31m[1m^[0m
+  [90m36 |[0m     openGraph: {
+  [90m37 |[0m       title: post.title,
+  [90m38 |[0m       description,
+Next.js build worker exited with code: 1 and signal: null

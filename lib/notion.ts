@@ -1,17 +1,54 @@
 ﻿import { Client } from "@notionhq/client";
 import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
-import { NotionPost, NotionBlock } from "@/types/notion";
+import { NotionPost, NotionBlock, NotionPostSchema } from "@/types/notion";
 
 // 환경 변수 로드 및 검증
 const NOTION_API_KEY = process.env.NOTION_API_KEY;
 const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID;
 
-if (!NOTION_API_KEY) {
-  throw new Error("NOTION_API_KEY 환경 변수가 설정되지 않았습니다.");
+/**
+ * 환경 변수 검증
+ * 애플리케이션 초기화 시 필수 설정이 있는지 확인합니다.
+ */
+function validateEnvironment(): void {
+  const errors: string[] = [];
+
+  if (!NOTION_API_KEY) {
+    errors.push(
+      "[설정 오류] NOTION_API_KEY 환경 변수가 설정되지 않았습니다. " +
+      ".env.local에 NOTION_API_KEY=secret_xxxxx 형식으로 추가하세요."
+    );
+  } else if (NOTION_API_KEY.length < 10) {
+    errors.push(
+      "[설정 오류] NOTION_API_KEY가 너무 짧습니다. " +
+      "유효한 Notion API 토큰인지 확인하세요."
+    );
+  }
+
+  if (!NOTION_DATABASE_ID) {
+    errors.push(
+      "[설정 오류] NOTION_DATABASE_ID 환경 변수가 설정되지 않았습니다. " +
+      ".env.local에 NOTION_DATABASE_ID=xxxxx 형식으로 추가하세요."
+    );
+  } else if (NOTION_DATABASE_ID.length < 20) {
+    errors.push(
+      "[설정 오류] NOTION_DATABASE_ID가 너무 짧습니다. " +
+      "유효한 Notion Database ID인지 확인하세요."
+    );
+  }
+
+  if (errors.length > 0) {
+    const fullMessage = errors.join("\n");
+    console.error("[Notion API] 초기화 실패:\n" + fullMessage);
+    throw new Error(fullMessage);
+  }
+
+  console.log("[Notion API] ✅ 환경 변수 검증 완료");
 }
 
-if (!NOTION_DATABASE_ID) {
-  throw new Error("NOTION_DATABASE_ID 환경 변수가 설정되지 않았습니다.");
+// 서버 측에서만 검증 (클라이언트 사이드 체크)
+if (typeof window === "undefined") {
+  validateEnvironment();
 }
 
 // Notion 클라이언트 초기화 (싱글톤 패턴)
@@ -124,42 +161,113 @@ export function extractCoverUrl(property: any): string | null {
 }
 
 // 에러 처리 함수
+/**
+ * Notion API 에러 처리 및 사용자 친화적 메시지 생성
+ * 에러 코드별로 명확한 해결 방법을 제시합니다.
+ */
 export function handleNotionError(error: any): NotionAPIError {
+  const errorCode = error.status || error.code || "UNKNOWN";
+  const errorMessage = error.message || "알 수 없는 오류";
+
+  // 401: 인증 오류
   if (error.status === 401) {
+    console.error(
+      "[Notion API] 401 Unauthorized: API Key가 유효하지 않습니다. " +
+      "Notion 통합 설정에서 토큰을 재생성해보세요."
+    );
     return new NotionAPIError(
       "UNAUTHORIZED",
-      "Notion API 인증 오류: NOTION_API_KEY를 확인하세요."
+      "❌ Notion API 인증 오류\n\n" +
+      "해결 방법:\n" +
+      "1. .env.local의 NOTION_API_KEY 값이 올바른지 확인하세요\n" +
+      "2. 토큰이 만료되었다면 https://www.notion.so/my-integrations에서 재생성하세요\n" +
+      "3. 로컬 서버를 재시작하세요"
     );
   }
 
+  // 403: 권한 오류
   if (error.status === 403) {
+    console.error(
+      "[Notion API] 403 Forbidden: Integration이 Database에 공유되지 않았습니다. " +
+      `Database ID: ${NOTION_DATABASE_ID}`
+    );
     return new NotionAPIError(
       "FORBIDDEN",
-      "Notion Database 접근 권한 오류: Integration이 Database에 공유되었는지 확인하세요."
+      "❌ Notion Database 접근 권한 오류\n\n" +
+      "해결 방법:\n" +
+      "1. Notion에서 해당 Database를 엽니다\n" +
+      "2. 우상단 공유 버튼 클릭\n" +
+      "3. 'Invite'에서 'Blog CMS' Integration을 검색해 추가하세요\n" +
+      "4. 로컬 서버를 재시작하세요"
     );
   }
 
+  // 404: 리소스 없음
   if (error.status === 404) {
+    console.error(
+      "[Notion API] 404 Not Found: Database를 찾을 수 없습니다. " +
+      `Database ID: ${NOTION_DATABASE_ID}`
+    );
     return new NotionAPIError(
       "NOT_FOUND",
-      "Notion Database를 찾을 수 없습니다: NOTION_DATABASE_ID를 확인하세요."
+      "❌ Notion Database를 찾을 수 없습니다\n\n" +
+      "해결 방법:\n" +
+      "1. .env.local의 NOTION_DATABASE_ID가 정확한지 확인하세요\n" +
+      "2. Notion에서 해당 Database가 존재하는지 확인하세요\n" +
+      "3. Database URL에서 ID를 복사해 다시 확인하세요\n" +
+      "4. 올바른 값으로 수정 후 서버를 재시작하세요"
     );
   }
 
+  // 429: Rate Limit
   if (error.status === 429) {
+    console.warn(
+      "[Notion API] 429 Rate Limited: API 호출 제한 초과. " +
+      "자동 재시도 로직이 활성화되어 있습니다."
+    );
     return new NotionAPIError(
       "RATE_LIMIT",
-      "Notion API Rate Limit 초과: 잠시 후 다시 시도하세요."
+      "⚠️ Notion API Rate Limit 초과\n\n" +
+      "해결 방법:\n" +
+      "- 시스템이 자동으로 재시도합니다 (최대 3회)\n" +
+      "- 계속 오류가 발생하면 몇 분 후 다시 시도하세요\n" +
+      "- Notion API는 3req/sec 제한이 있습니다"
     );
   }
 
+  // 500+: 서버 오류
+  if (error.status && error.status >= 500) {
+    console.error(
+      `[Notion API] ${error.status} Server Error: Notion 서버에 일시적 문제가 있습니다.`
+    );
+    return new NotionAPIError(
+      "SERVER_ERROR",
+      `❌ Notion 서버 오류 (HTTP ${error.status})\n\n` +
+      "해결 방법:\n" +
+      "- Notion 상태 페이지 확인: https://status.notion.so\n" +
+      "- 몇 분 후 다시 시도하세요"
+    );
+  }
+
+  // 기타 에러
+  console.error(
+    `[Notion API] 예상 외 오류 (${errorCode}): ${errorMessage}`
+  );
   return new NotionAPIError(
-    error.code || "UNKNOWN",
-    error.message || "Notion API 오류가 발생했습니다."
+    errorCode,
+    `❌ Notion API 오류: ${errorMessage}\n\n` +
+    "자세한 내용:\n" +
+    `- 에러 코드: ${errorCode}\n` +
+    `- 상태: ${error.status || "N/A"}\n` +
+    "개발자 콘솔을 확인하세요."
   );
 }
 
 // parsePost 함수 (Phase 1.3.4에서 구현)
+/**
+ * Notion Page 객체를 NotionPost로 변환하고 Zod 스키마로 검증합니다.
+ * 검증 실패 시 상세한 에러 정보를 로깅합니다.
+ */
 function parsePost(page: PageObjectResponse): NotionPost | null {
   try {
     const properties = page.properties as Record<string, any>;
@@ -172,15 +280,18 @@ function parsePost(page: PageObjectResponse): NotionPost | null {
     const coverImage = extractCoverUrl(properties.Cover);
     const isPublished = properties.Published?.checkbox ?? false;
 
-    // 필수 필드 검증
+    // 기본 필드 검증 (필수 필드가 있는지 확인)
     if (!title || !slug || !publishedAt) {
       console.warn(
-        `[Notion API] 포스트 파싱 오류: 포스트 ${page.id}의 필수 필드 누락`
+        `[Notion API] 포스트 파싱 오류 (필수 필드 누락): 포스트 ID: ${page.id}, ` +
+        `title: ${title ? "✓" : "✗"}, slug: ${slug ? "✓" : "✗"}, ` +
+        `publishedAt: ${publishedAt ? "✓" : "✗"}`
       );
       return null;
     }
 
-    return {
+    // 파싱된 데이터 생성
+    const post = {
       id: page.id,
       slug,
       title,
@@ -190,8 +301,32 @@ function parsePost(page: PageObjectResponse): NotionPost | null {
       coverImage,
       isPublished,
     };
+
+    // Zod 스키마로 런타임 검증
+    const validationResult = NotionPostSchema.safeParse(post);
+
+    if (!validationResult.success) {
+      // 검증 실패 - 상세 에러 정보 로깅
+      const errorSummary = validationResult.error.issues
+        .map(err => `필드 '${err.path.join(".")}': ${err.message}`)
+        .join("; ");
+
+      console.error(
+        `[Notion API] 포스트 검증 실패 (ID: ${page.id}): ${errorSummary}`
+      );
+      return null;
+    }
+
+    // 검증 성공
+    console.debug(
+      `[Notion API] 포스트 검증 성공: ${post.title} (slug: ${post.slug})`
+    );
+    return validationResult.data;
   } catch (error) {
-    console.error(`[Notion API] 포스트 ${page.id} 파싱 중 오류:`, error);
+    console.error(
+      `[Notion API] 포스트 ${page.id} 파싱 중 예상 외 오류:`,
+      error instanceof Error ? error.message : error
+    );
     return null;
   }
 }
@@ -327,33 +462,64 @@ export async function getPublishedPosts(
 
 // getPostBySlug 함수 (Phase 3.1에서 구현)
 // Slug 기반 포스트 조회
+/**
+ * 주어진 slug로 포스트를 조회합니다.
+ * 포스트가 없거나 미게시(Published=false)이면 null을 반환합니다.
+ */
 export async function getPostBySlug(slug: string): Promise<NotionPost | null> {
   try {
+    console.log(`[Notion API] 포스트 조회 시작: slug='${slug}'`);
+
     const posts = await getAllPosts();
     const post = posts.find((p) => p.slug === slug);
 
     if (!post) {
-      console.warn(`[Notion API] 포스트 slug '${slug}' 없음`);
+      console.warn(
+        `[Notion API] ⚠️ 포스트 미발견: slug='${slug}' (가능한 원인: 잘못된 slug, 미게시 상태)`
+      );
       return null;
     }
 
+    if (!post.isPublished) {
+      console.warn(
+        `[Notion API] ⚠️ 포스트 미게시: slug='${slug}', title='${post.title}'`
+      );
+      return null;
+    }
+
+    console.log(
+      `[Notion API] ✅ 포스트 조회 성공: title='${post.title}', slug='${slug}'`
+    );
     return post;
   } catch (error: any) {
+    console.error(
+      `[Notion API] 포스트 조회 중 오류: slug='${slug}', 에러:`,
+      error
+    );
     const notionError = handleNotionError(error);
-    console.error(`[Notion API] 포스트 조회 실패:`, notionError.message);
+    console.error(`[Notion API] 상세: ${notionError.message}`);
     throw notionError;
   }
 }
 
-// getPostBlocks 함수 (Phase 3.1에서 구현)
-// 포스트 페이지의 블록 데이터 조회
+/**
+ * 포스트 페이지의 모든 블록을 재귀적으로 조회합니다.
+ * 자식 블록(has_children=true)도 함께 조회됩니다.
+ */
 export async function getPostBlocks(pageId: string): Promise<NotionBlock[]> {
   try {
+    console.debug(`[Notion API] 블록 조회 시작: pageId='${pageId}'`);
+
     const blocks: NotionBlock[] = [];
     let cursor: string | undefined = undefined;
+    let pageIndex = 0;
 
     // 페이지의 모든 블록 조회 (페이지네이션 처리) - withRetry 적용
     while (true) {
+      console.debug(
+        `[Notion API] 블록 페이지 ${pageIndex} 조회 중: pageId='${pageId}'`
+      );
+
       const response: any = await withRetry(() =>
         (notion.blocks.children as any).list({
           block_id: pageId,
@@ -362,17 +528,29 @@ export async function getPostBlocks(pageId: string): Promise<NotionBlock[]> {
         })
       );
 
+      const batchBlockCount = response.results?.length || 0;
+      console.debug(
+        `[Notion API] 블록 배치 수신: ${batchBlockCount}개 (pageId='${pageId}')`
+      );
+
       for (const block of response.results) {
         const blockData = block as any;
+        const blockType = blockData.type;
+        const hasChildren = blockData.has_children ? "자식 있음" : "자식 없음";
+
         const notionBlock: NotionBlock = {
           id: blockData.id,
-          type: blockData.type,
+          type: blockType,
           content: blockData,
           parentId: pageId,
         };
 
         // 자식 블록이 있으면 재귀적으로 조회
         if (blockData.has_children) {
+          console.debug(
+            `[Notion API] 자식 블록 조회 중: 타입='${blockType}', ` +
+            `부모='${pageId}'`
+          );
           notionBlock.children = await getPostBlocks(blockData.id);
         }
 
@@ -381,13 +559,36 @@ export async function getPostBlocks(pageId: string): Promise<NotionBlock[]> {
 
       if (!response.has_more) break;
       cursor = response.next_cursor ?? undefined;
+      pageIndex++;
     }
 
-    console.log(`[Notion API] 페이지 ${pageId}의 블록 ${blocks.length}개 조회됨`);
+    // 블록 타입별 통계
+    const blockTypeStats = blocks.reduce(
+      (acc, block) => {
+        acc[block.type] = (acc[block.type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
+    const typesSummary = Object.entries(blockTypeStats)
+      .map(([type, count]) => `${type}(${count})`)
+      .join(", ");
+
+    console.log(
+      `[Notion API] ✅ 블록 조회 완료: ` +
+      `pageId='${pageId}', 총 ${blocks.length}개 ` +
+      `(${typesSummary})`
+    );
+
     return blocks;
   } catch (error: any) {
+    console.error(
+      `[Notion API] 블록 조회 실패: pageId='${pageId}', 에러:`,
+      error
+    );
     const notionError = handleNotionError(error);
-    console.error(`[Notion API] 블록 조회 실패:`, notionError.message);
+    console.error(`[Notion API] 상세: ${notionError.message}`);
     throw notionError;
   }
 }
