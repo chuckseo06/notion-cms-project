@@ -77,10 +77,10 @@ export default async function PostPage({ params }: PostPageProps) {
   const blocks = await getPostBlocks(post.id);
 
   return (
-    <article className="container mx-auto max-w-3xl px-4 py-12">
+    <article className="container mx-auto max-w-3xl px-4 py-12 bg-background min-h-screen">
       {/* 커버 이미지 */}
       {post.coverImage && (
-        <div className="mb-8 -mx-4 md:mx-0 md:rounded-lg overflow-hidden bg-gray-200">
+        <div className="mb-8 -mx-4 md:mx-0 md:rounded-lg overflow-hidden bg-amber-100">
           <div className="relative w-full h-96">
             <Image
               src={post.coverImage}
@@ -102,7 +102,7 @@ export default async function PostPage({ params }: PostPageProps) {
         </h1>
 
         {/* 메타정보 */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 pb-6 border-b border-gray-200">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 pb-6 border-b border-amber-200">
           <time
             dateTime={post.publishedAt.toISOString()}
             className="text-sm text-gray-600"
@@ -126,7 +126,7 @@ export default async function PostPage({ params }: PostPageProps) {
               <Link
                 key={tag}
                 href={`/?tag=${encodeURIComponent(tag)}`}
-                className="inline-block px-3 py-1 text-xs font-semibold bg-rose-50 text-rose-700 rounded-full hover:bg-rose-100 transition"
+                className="inline-block px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition"
               >
                 #{tag}
               </Link>
@@ -160,7 +160,7 @@ export default async function PostPage({ params }: PostPageProps) {
         <div className="mb-8">
           <Link
             href="/"
-            className="inline-flex items-center text-rose-500 hover:text-rose-600 transition font-medium"
+            className="inline-flex items-center text-gray-600 hover:text-gray-800 transition font-medium"
           >
             <span className="mr-2">←</span>
             목록으로 돌아가기

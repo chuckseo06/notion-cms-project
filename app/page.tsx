@@ -25,7 +25,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   ]);
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-10">
+    <div className="container mx-auto max-w-4xl px-4 py-10 bg-background min-h-screen">
       {/* 페이지 헤더 */}
       <section className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">

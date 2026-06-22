@@ -1,8 +1,8 @@
 # Notion CMS 개인 블로그 MVP 개발 로드맵
 
 **작성일**: 2026-06-16  
-**마지막 업데이트**: 2026-06-21  
-**현재 진행**: Phase 2 ✅ 완료  
+**마지막 업데이트**: 2026-06-22  
+**현재 진행**: Phase 5 (최종 배포 준비) 🚀  
 **팀 규모**: 1인 개발자  
 **배포 대상**: Vercel  
 
@@ -347,45 +347,32 @@ Phase 5: ISR, 최적화 & 배포              (3-4일)
 
 ### Phase 1 체크포인트 (Checkpoint 1) ✅ 완료
 
-**검증 사항**: 2026-06-21 완료
+**검증 사항** (2026-06-21):
 
-1. Notion 환경 설정 완료 (참고: docs/NOTION_API_GUIDE.md)
-   - [x] Integration Token 생성됨 (https://www.notion.so/my-integrations)
-   - [x] Database ID 확인됨 (URL에서 32자 UUID 추출)
-   - [x] 필수 속성 7개 모두 생성됨:
-     - [x] Title (기본)
-     - [x] Slug (Text)
-     - [x] Published (Checkbox)
-     - [x] PublishedAt (Date)
-     - [x] Tags (Multi-select)
-     - [x] Excerpt (Text)
-     - [x] Cover (Files & media)
-   - [x] 테스트 포스트 2개 (Published=true, 각 5개+ 블록 포함)
+1. **Notion 환경 설정**
+   - [x] Integration Token 생성 (https://www.notion.so/my-integrations)
+   - [x] Database ID 확인 (UUID 32자)
+   - [x] 필수 속성 7개: Title, Slug, Published, PublishedAt, Tags, Excerpt, Cover
+   - [x] 테스트 포스트 2개 (Published=true, 5개+ 블록)
 
-2. 로컬 개발 환경 설정
-   - [x] `.env.local` 파일 생성
-   - [x] `NOTION_API_KEY=secret_xxxxx` 저장됨
-   - [x] `NOTION_DATABASE_ID=xxxxx` 저장됨
-   - [x] `.gitignore`에 `.env.local` 포함됨
-   - [x] `npm run dev` 실행 시 환경 변수 로드 가능
+2. **개발 환경 설정**
+   - [x] `.env.local` 파일 생성 (NOTION_API_KEY, NOTION_DATABASE_ID)
+   - [x] `.gitignore` 확인
+   - [x] 환경 변수 로드 테스트
 
-3. 기본 라이브러리 구현 (Phase 1.3 완료)
-   - [x] `lib/notion.ts` 작성 완료 (354줄, 클라이언트 초기화, 헬퍼 함수, parsePost, getAllPosts, getPageBlocks)
-   - [x] `types/notion.ts` 정의 완료 (36줄, NotionPost, NotionBlock 인터페이스, Zod 스키마)
-   - [x] `getAllPosts()` 함수 구현 완료 (dataSources.query() 사용)
-   - [x] 각 포스트 필드가 올바른 타입으로 파싱됨:
-     - id (string), slug (string), title (string)
-     - publishedAt (Date), tags (string[])
-     - excerpt (string), coverImage (string | null)
-     - isPublished (boolean)
+3. **라이브러리 구현**
+   - [x] `lib/notion.ts`: @notionhq/client 초기화, 헬퍼 함수 (extractText, extractDate, extractMultiSelect, extractCoverUrl)
+   - [x] `types/notion.ts`: NotionPost, NotionBlock 인터페이스, Zod 스키마
+   - [x] `getAllPosts()`: dataSources.query() 사용, Filter/Sort
+   - [x] `parsePost()`: 필드 파싱 및 검증 (title, slug, publishedAt 필수)
 
-4. 에러 핸들링 검증
-   - [x] API Key 누락 시 명확한 에러 메시지
-   - [x] Database ID 잘못되었을 때 404 에러 처리
-   - [x] Integration이 공유되지 않았을 때 403 에러 처리
-   - [x] Rate Limit (429) 에러 처리
+4. **에러 핸들링**
+   - [x] API Key 누락 → 명확한 메시지
+   - [x] Database ID 오류 → 404 처리
+   - [x] Integration 미공유 → 403 처리
+   - [x] Rate Limit → 429 처리
 
-**완료 일자**: 2026-06-21 (예상 대비 3일 단축 — 중간 Notion API 엔드포인트 변경 문제 해결으로 지연)
+**완료**: 2026-06-21 (예상 4-5일 → 실제 3일, Notion API 엔드포인트 변경으로 지연)
 
 ---
 
@@ -399,288 +386,90 @@ Phase 5: ISR, 최적화 & 배포              (3-4일)
 
 **작업**: 모든 페이지에서 사용할 헤더 및 푸터 컴포넌트 구현
 
-**세부 작업**:
-
-1. **`components/Header.tsx` 컴포넌트 생성**
-   - 블로그 타이틀/로고 (링크: 홈으로)
-   - 네비게이션 메뉴 (향후 확장용)
-   - 기본 구조: `<header>` > `<nav>` > `<Link>`
-   - 스타일링: Tailwind CSS
-
-   ```tsx
-   // 기본 구조
-   <header className="border-b border-gray-200 sticky top-0 z-50">
-     <div className="container mx-auto px-4 py-4">
-       <div className="flex justify-between items-center">
-         <Link href="/" className="text-2xl font-bold">
-           블로그 이름
-         </Link>
-       </div>
-     </div>
-   </header>
-   ```
-
-2. **`components/Footer.tsx` 컴포넌트 생성**
-   - 저작권 표시
-   - 블로거 간단한 자기소개 (1줄)
-   - 소셜 링크 (선택적)
-
-   ```tsx
-   // 기본 구조
-   <footer className="border-t border-gray-200 mt-16 py-8">
-     <div className="container mx-auto px-4 text-center text-sm text-gray-600">
-       © 2026 Your Name. All rights reserved.
-     </div>
-   </footer>
-   ```
-
-3. **`app/layout.tsx` (RootLayout) 수정**
-   - Header, Footer 포함
-   - 기본 메타데이터 설정 (타이틀, 설명)
-   - 글로벌 스타일 적용
-
+1. **`components/Header.tsx`**: 블로그 타이틀/로고 + 네비게이션 (sticky, Tailwind CSS)
+2. **`components/Footer.tsx`**: 저작권 + 블로거 정보 (연도 동적 처리)
+3. **`app/layout.tsx`**: Header, Footer 통합, 기본 메타데이터
 
 **성공 기준**:
-- [ ] Header 컴포넌트 작성 완료
-- [ ] Footer 컴포넌트 작성 완료
-- [ ] RootLayout에 통합됨
-- [ ] 모든 페이지에서 헤더/푸터 표시됨
-
-**관련 파일**:
-- `components/Header.tsx` (새로 생성)
-- `components/Footer.tsx` (새로 생성)
-- `app/layout.tsx` (수정)
+- [x] Header/Footer 컴포넌트 완성
+- [x] RootLayout 통합
+- [x] 모든 페이지에 표시
 
 ---
 
 ### Phase 2.2: PostCard 컴포넌트 개발
 
-**작업**: 포스트 목록에 표시될 카드 컴포넌트 구현
+**작업**: 포스트 카드 컴포넌트 (Props: NotionPost)
 
-**세부 작업**:
+**구현 내용**:
+- 커버 이미지 + 제목 + 날짜 + 태그 뱃지 + 요약
+- 카드 클릭: 포스트 상세로 이동
+- 태그 클릭: 홈에서 필터 적용 (/?tag=TAG_NAME)
+- Tailwind CSS 호버 효과 + 반응형
 
-1. **`components/PostCard.tsx` 컴포넌트 생성**
-   - Props: NotionPost
-   - 렌더링 요소:
-     - 커버 이미지 (있을 경우)
-     - 포스트 제목
-     - 게시 날짜 (형식: YYYY-MM-DD)
-     - 태그 목록 (뱃지 형태)
-     - 요약(Excerpt)
-   
-   - 상호작용:
-     - 카드 클릭 시 포스트 상세 페이지로 이동
-     - 태그 클릭 시 태그 필터링 (/?tag=TAG_NAME)
-
-2. **스타일링**
-   - Tailwind CSS로 일관된 디자인
-   - 호버 효과 추가 (마우스 오버 시 그림자 강조)
-   - 반응형 레이아웃 (모바일 친화적)
-
-3. **shadcn 컴포넌트 활용** (선택적)
-   - Card: 카드 레이아웃
-   - Badge: 태그 뱃지
-
-```tsx
-// 기본 구조
-<Link href={`/posts/${post.slug}`}>
-  <div className="border rounded-lg overflow-hidden hover:shadow-lg transition">
-    {post.coverImage && <img src={post.coverImage} alt={post.title} />}
-    <div className="p-4">
-      <h3 className="text-lg font-bold">{post.title}</h3>
-      <time className="text-sm text-gray-500">{post.publishedAt}</time>
-      <div className="flex flex-wrap gap-2 mt-2">
-        {post.tags.map(tag => <Badge key={tag}>{tag}</Badge>)}
-      </div>
-      <p className="text-sm text-gray-600 mt-2">{post.excerpt}</p>
-    </div>
-  </div>
-</Link>
-```
-
-
-**성공 기준**:
-- [ ] PostCard 컴포넌트 작성 완료
-- [ ] 모든 필드 렌더링됨
-- [ ] 링크 작동 (포스트 상세 페이지로 이동)
-- [ ] 태그 클릭 시 필터링 작동
-- [ ] 반응형 디자인 적용
-
-**관련 파일**:
-- `components/PostCard.tsx` (새로 생성)
+**성공 기준**: ✅ 모든 필드 렌더링 | 링크/필터 작동
 
 ---
 
 ### Phase 2.3: 태그 필터 UI 구현 (F003)
 
-**작업**: 홈 페이지에서 태그로 포스트를 필터링하는 UI 구현
+**작업**: 홈 페이지에서 태그로 포스트 필터링
 
-**세부 작업**:
+**구현 내용**:
+- `getAllTags()`: 모든 포스트에서 고유 태그 추출 → 알파벳순 정렬
+- `getPostsByTag(tag)`: Published = true AND Tags contains TAG
+- `components/TagFilter.tsx`: "전체" 버튼 + 각 태그 버튼 (선택 시 파란색, 미선택 시 회색)
+- 클릭 시 `/?tag=TAG_NAME` 쿼리 파라미터로 이동
 
-1. **`getAllTags()` 함수 구현** (`lib/notion.ts`)
-   - 모든 포스트에서 고유 태그 추출
-   - 알파벳순 정렬
-   - 반환: string[] 배열
-
-2. **`components/TagFilter.tsx` 컴포넌트 생성**
-   - Props: tags (string[]), selectedTag (optional)
-   - 렌더링:
-     - "전체" 버튼 (필터 초기화)
-     - 각 태그별 필터 버튼
-   - 상호작용: 클릭 시 `/?tag=TAG_NAME` 쿼리 파라미터로 이동
-   - 선택된 태그 강조 (색상 변경)
-
-3. **스타일링**
-   - 선택됨: 파란색 배경, 흰색 글자
-   - 미선택: 회색 배경, 호버 시 진회색
-   - 패딩/마진 일관성 유지
-
-```tsx
-// 기본 구조
-<div className="flex flex-wrap gap-2">
-  <Link href="/" className={selectedTag ? "bg-gray-200" : "bg-blue-500 text-white"}>
-    전체
-  </Link>
-  {tags.map(tag => (
-    <Link key={tag} href={`/?tag=${encodeURIComponent(tag)}`} 
-          className={selectedTag === tag ? "bg-blue-500 text-white" : "bg-gray-200"}>
-      {tag}
-    </Link>
-  ))}
-</div>
-```
-
-4. **`getPostsByTag()` 함수 구현** (`lib/notion.ts`)
-   - Filter: Published = true AND Tags contains TAG_NAME
-   - 반환: NotionPost[]
-
-
-**성공 기준**:
-- [ ] `getAllTags()` 함수 구현 및 테스트
-- [ ] `getPostsByTag()` 함수 구현 및 테스트
-- [ ] TagFilter 컴포넌트 작성 완료
-- [ ] 필터 적용 시 포스트 목록 변경됨
-- [ ] "전체" 버튼 클릭 시 필터 초기화됨
-
-**관련 파일**:
-- `lib/notion.ts` (함수 추가)
-- `components/TagFilter.tsx` (새로 생성)
+**성공 기준**: ✅ 함수 구현 | 필터 작동 | 전체 초기화
 
 ---
 
 ### Phase 2.4: 홈 페이지 완성 (`app/page.tsx`)
 
-**작업**: 홈 페이지 최종 구현 및 ISR 설정
+**작업**: Server Component로 포스트 목록 페이지 구현
 
-**세부 작업**:
+**구현 내용**:
+- `searchParams` (tag) 처리: 쿼리 파라미터로 필터링
+- `getAllPosts()` 또는 `getPostsByTag()` 호출
+- 렌더링: 제목 + TagFilter + PostCard 목록 + Empty state
+- `export const revalidate = 3600` (1시간 ISR)
+- Tailwind: container + grid-cols-1 + py-8
 
-1. **`app/page.tsx` 작성**
-   - `getAllPosts()` 또는 `getPostsByTag()` 호출
-   - 쿼리 파라미터 (tag) 처리
-   - 렌더링:
-     - 헤더/푸터 (layout.tsx 상속)
-     - 제목 ("블로그")
-     - TagFilter 컴포넌트
-     - PostCard 목록
-   - 포스트 없음 상태 처리 (Empty state)
-
-2. **ISR 설정**
-   ```tsx
-   export const revalidate = 3600; // 1시간마다 재검증
-   ```
-
-3. **동적 라우팅 지원**
-   ```tsx
-   interface HomePageProps {
-     searchParams: Promise<{ tag?: string }>;
-   }
-   
-   export default async function Home({ searchParams }: HomePageProps) {
-     const params = await searchParams;
-     const selectedTag = params.tag;
-     // ...
-   }
-   ```
-
-4. **레이아웃 및 스타일**
-   - Container 클래스로 중앙 정렬
-   - 포스트 그리드 (grid-cols-1)
-   - 여백 및 간격 일관성
-
-```tsx
-// 기본 구조
-export const revalidate = 3600;
-
-export default async function Home({ searchParams }: HomePageProps) {
-  const params = await searchParams;
-  const selectedTag = params.tag;
-  
-  const posts = selectedTag 
-    ? await getPostsByTag(selectedTag)
-    : await getAllPosts();
-  
-  const allTags = await getAllTags();
-  
-  return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-4xl font-bold mb-8">블로그</h1>
-      <TagFilter tags={allTags} selectedTag={selectedTag} />
-      
-      {posts.length === 0 ? (
-        <p className="text-gray-500 text-center">포스트가 없습니다.</p>
-      ) : (
-        <div className="grid grid-cols-1 gap-6">
-          {posts.map(post => <PostCard key={post.id} post={post} />)}
-        </div>
-      )}
-    </div>
-  );
-}
-```
-
-
-**성공 기준**:
-- [ ] 홈 페이지 렌더링됨
-- [ ] 포스트 목록 표시됨
-- [ ] 태그 필터 작동
-- [ ] 포스트 카드 클릭 시 상세 페이지 이동 (404는 아직 괜찮음)
-- [ ] ISR revalidate 설정됨
-- [ ] 포스트 없음 상태 표시됨
-
-**관련 파일**:
-- `app/page.tsx` (새로 생성 또는 수정)
-- `components/PostCard.tsx` (참고)
-- `components/TagFilter.tsx` (참고)
+**성공 기준**: ✅ 페이지 렌더링 | 필터 작동 | ISR 설정
 
 ---
 
 ### Phase 2 체크포인트 (Checkpoint 2) ✅ 완료
 
-**검증 사항**: 2026-06-21 완료
+**검증 사항** (2026-06-21):
 
-1. 홈 페이지 기능 완성
-   - [x] 포스트 목록 렌더링됨 (Notion DB에서 동적 조회)
-   - [x] 태그 필터 작동 (쿼리 파라미터 기반 필터링)
-   - [x] 포스트 카드 표시 (제목, 날짜, 태그, 요약, 커버 이미지)
+1. **홈 페이지 기능**
+   - [x] Notion DB에서 동적 조회 (getAllPosts)
+   - [x] PostCard 컴포넌트: 커버 + 제목 + 날짜 + 태그 + 요약
+   - [x] TagFilter: "전체" + 각 태그 버튼, 선택 시 파란색
+   - [x] 쿼리 파라미터 처리 (/?tag=TAG_NAME)
+   - [x] Empty state 메시지
 
-2. 레이아웃 및 네비게이션
-   - [x] 헤더 표시 (블로그 타이틀, 홈 링크)
-   - [x] 푸터 표시 (저작권, 연도 동적 계산)
-   - [x] 모든 페이지에 헤더/푸터 포함 (RootLayout)
+2. **레이아웃 & 네비게이션**
+   - [x] Header: 블로그 타이틀 + 홈 링크 (sticky)
+   - [x] Footer: 저작권 + 연도 동적 처리
+   - [x] RootLayout 통합 (모든 페이지)
+   - [x] PostCard 클릭 → /posts/[slug] 이동
 
-3. ISR 설정
-   - [x] `export const revalidate = 3600` 설정됨 (app/page.tsx)
-   - [x] 로컬 개발에서 동적 재생성 확인 (매 요청마다 fresh 데이터)
-   - [x] Notion 변경 시 브라우저 새로고침으로 즉시 반영 확인
+3. **ISR & 성능**
+   - [x] `export const revalidate = 3600` (1시간 재검증)
+   - [x] 로컬 개발: 매 요청마다 fresh 데이터
+   - [x] Notion 변경 → 새로고침으로 즉시 반영
 
-**완료 일자**: 2026-06-21 (예상 대비 5일 단축)
+**구현 파일**:
+- `app/page.tsx`: Server Component, searchParams 처리
+- `components/PostCard.tsx`: 카드 UI + 링크
+- `components/TagFilter.tsx`: 필터 버튼 + 네비게이션
+- `components/Header.tsx`: sticky header
+- `components/Footer.tsx`: copyright + info
 
-**구현된 컴포넌트**:
-- `app/page.tsx` — 홈 페이지 (Server Component)
-- `components/blog/PostCard.tsx` — 포스트 카드 (Client Component, onClick 네비게이션)
-- `components/blog/TagFilter.tsx` — 태그 필터 UI (Client Component)
-- `components/Header.tsx` — 전역 헤더 (Server Component)
-- `components/Footer.tsx` — 전역 푸터 (Server Component)
+**완료**: 2026-06-21 (예상 4-5일 → 실제 2일)
 
 ---
 
@@ -692,380 +481,101 @@ export default async function Home({ searchParams }: HomePageProps) {
 
 ### Phase 3.1: 포스트 상세 조회 함수 구현
 
-**작업**: Slug 기반 포스트 조회 및 블록 페칭 함수 구현
+**작업**: Slug 기반 포스트 & 블록 조회 함수
 
-**세부 작업**:
+**구현 내용**:
+- `getPost(slug)`: getAllPosts()에서 slug 일치하는 포스트 검색 → NotionPost | null
+- `getPageBlocksRecursive(pageId)`: 페이지의 모든 블록을 재귀적으로 조회
+  - 페이지네이션 (max 100개씩)
+  - has_children 속성으로 자식 블록 포함
 
-1. **`getPost()` 함수 구현** (`lib/notion.ts`)
-   - 매개변수: slug (문자열)
-   - 동작: getAllPosts()에서 slug 일치하는 포스트 찾기
-   - 반환: NotionPost | null
-
-2. **`getPageBlocksRecursive()` 함수 구현** (`lib/notion.ts`)
-   - 매개변수: pageId (Notion Page ID)
-   - 동작: 페이지의 모든 블록을 재귀적으로 조회
-   - 페이지네이션 처리 (max 100개씩)
-   - 자식 블록 포함 (has_children)
-   - 반환: Block[] 배열
-
-```typescript
-// 기본 구조
-export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
-  const blocks = [];
-  let cursor = undefined;
-
-  while (true) {
-    const response = await notion.blocks.children.list({
-      block_id: pageId,
-      page_size: 100,
-      start_cursor: cursor,
-    });
-
-    for (const block of response.results) {
-      let blockData = { ...block };
-      
-      if (block.has_children) {
-        blockData.children = await getPageBlocksRecursive(block.id);
-      }
-      
-      blocks.push(blockData);
-    }
-
-    if (!response.has_more) break;
-    cursor = response.next_cursor;
-  }
-
-  return blocks;
-}
-```
-
-3. **테스트**
-   - 테스트 포스트 slug로 조회 가능 확인
-   - 블록 5-10개 조회 확인
-
-
-**성공 기준**:
-- [x] `getPost()` 함수 동작
-- [x] `getPageBlocksRecursive()` 함수 동작
-- [x] 블록 배열 반환됨 (최소 5개 이상)
-- [x] 각 블록 타입 (paragraph, heading, code 등) 포함
-
-**관련 파일**:
-- `lib/notion.ts` (함수 추가)
+**성공 기준**: ✅ 포스트 조회 동작 | 블록 5개+ 반환
 
 ---
 
 ### Phase 3.2: BlockRenderer 컴포넌트 개발 ✅
 
-**작업**: Notion 블록 타입을 React 컴포넌트로 변환하는 렌더러 구현
+**작업**: Notion 블록 타입을 HTML로 변환하는 Server Component
 
-**참고**: docs/NOTION_API_GUIDE.md - 섹션 7, 8 (블록 조회 및 렌더링)
+**지원 블록 타입 (8가지)**:
+- **paragraph**: rich_text + RichText 포맷팅 (bold, italic, code, link 등)
+- **heading_1/2/3**: h1/h2/h3 태그 (3단계 계층)
+- **code**: 코드 블록 (Shiki 강조 예정)
+- **image**: 파일 또는 외부 URL
+- **bulleted_list_item / numbered_list_item**: ul/ol 목록
+- **quote**: blockquote (border-l-4, italic)
+- **divider**: hr 태그
 
-**세부 작업**:
+**RichText 헬퍼**: bold, italic, strikethrough, code, underline, link 처리
 
-1. **`components/BlockRenderer.tsx` 컴포넌트 생성**
-   - Props: block (Notion 블록 객체), async Server Component
-   - 지원 블록 타입 (8가지 주요 타입):
-     - paragraph (단락) - rich_text with annotations
-     - heading_1, heading_2, heading_3 (제목) - 3단계 계층
-     - code (코드 블록) - 언어 지정, Shiki 강조
-     - image (이미지) - 파일 또는 외부 URL
-     - bulleted_list_item (불릿 목록) - list-disc
-     - numbered_list_item (번호 목록) - list-decimal
-     - quote (인용) - blockquote 스타일
-     - divider (구분선) - hr 태그
-   - 기타 타입: null 반환 (toggle, table 등 향후 확장)
-
-2. **각 블록 타입별 렌더링**
-
-   **Paragraph (단락)**
-   ```tsx
-   case "paragraph":
-     return (
-       <p className="my-4 text-base leading-relaxed">
-         {block.paragraph?.rich_text.map((text: any) => (
-           <RichText key={text.id} text={text} />
-         ))}
-       </p>
-     );
-   ```
-
-   **Heading (제목)**
-   ```tsx
-   case "heading_1":
-     return (
-       <h1 className="text-3xl font-bold my-6">
-         {block.heading_1?.rich_text.map((text: any) => text.text.content).join("")}
-       </h1>
-     );
-   // heading_2, heading_3 유사...
-   ```
-
-   **Code (코드 블록)**
-   - Shiki 통합 (다음 섹션 참고)
-   ```tsx
-   case "code":
-     const code = block.code?.rich_text.map((t: any) => t.text.content).join("");
-     const html = await codeToHtml(code, {
-       lang: block.code?.language || "plain",
-       theme: "github-light",
-     });
-     return (
-       <div
-         className="my-4 rounded-lg bg-gray-900 text-white p-4 overflow-x-auto"
-         dangerouslySetInnerHTML={{ __html: html }}
-       />
-     );
-   ```
-
-   **Image (이미지)**
-   ```tsx
-   case "image":
-     const imageUrl = block.image?.file?.url || block.image?.external?.url;
-     return (
-       <figure className="my-8">
-         <img src={imageUrl} alt="Post image" className="w-full rounded-lg" />
-       </figure>
-     );
-   ```
-
-   **List Items (목록)**
-   ```tsx
-   case "bulleted_list_item":
-     return (
-       <ul className="list-disc list-inside my-4">
-         <li>{block.bulleted_list_item?.rich_text.map(t => t.text.content).join("")}</li>
-       </ul>
-     );
-   // numbered_list_item 유사...
-   ```
-
-   **Quote (인용)**
-   ```tsx
-   case "quote":
-     return (
-       <blockquote className="border-l-4 border-gray-300 pl-4 italic my-4">
-         {block.quote?.rich_text.map(t => t.text.content).join("")}
-       </blockquote>
-     );
-   ```
-
-   **Divider (구분선)**
-   ```tsx
-   case "divider":
-     return <hr className="my-8" />;
-   ```
-
-3. **RichText 포맷팅 헬퍼 함수**
-   ```tsx
-   // bold, italic, strikethrough, code, underline, color 등 처리
-   function RichText({ text }: { text: any }) {
-     const { bold, italic, strikethrough, code, underline } = text.annotations ?? {};
-     
-     let className = "";
-     if (bold) className += "font-bold ";
-     if (italic) className += "italic ";
-     if (strikethrough) className += "line-through ";
-     if (code) className += "bg-gray-200 px-2 py-1 rounded font-mono text-sm ";
-     
-     const content = text.text.content;
-     
-     if (text.href) {
-       return (
-         <a href={text.href} className="text-blue-600 underline">
-           {content}
-         </a>
-       );
-     }
-     
-     return <span className={className}>{content}</span>;
-   }
-   ```
-
-
-**성공 기준**:
-- [x] BlockRenderer 컴포넌트 작성 완료
-- [x] 8개 주요 블록 타입 모두 지원
-- [x] RichText 포맷팅 (bold, italic, 링크 등) 동작
-- [x] 코드 블록 테스트 (다음 섹션에서 Shiki 추가)
-
-**관련 파일**:
-- `components/BlockRenderer.tsx` (새로 생성)
+**성공 기준**: ✅ 8개 타입 모두 지원 | RichText 포맷팅 작동
 
 ---
 
 ### Phase 3.3: Shiki 통합 (코드 블록 구문 강조) ✅
 
-**작업**: 코드 블록에 구문 강조 추가
+**작업**: 코드 블록에 구문 강조 추가 (이미 shiki@^4.0.2 설치됨)
 
-**세부 작업**:
+**구현 내용**:
+- `lib/shiki-highlight.ts`: `highlightCode(code, language)` → codeToHtml() 사용
+- 테마: github-light | 지원 언어: JavaScript, TypeScript, Python, Java, CSS 등
+- Fallback: 지원하지 않는 언어 → 기본 텍스트로 렌더링
+- BlockRenderer의 code 블록에서 사용
 
-1. **Shiki 라이브러리 설정**
-   - 이미 package.json에 `shiki@^4.0.2` 설치됨
-   - 추가 설정 필요 없음
-
-2. **코드 강조 함수 구현** (`lib/shiki-highlight.ts`)
-   ```typescript
-   import { codeToHtml } from "shiki";
-
-   export async function highlightCode(
-     code: string,
-     language: string = "plain"
-   ): Promise<string> {
-     try {
-       const html = await codeToHtml(code, {
-         lang: language,
-         theme: "github-light",
-       });
-       return html;
-     } catch (error) {
-       console.warn(`Shiki: 언어 '${language}' 지원 안 함. 기본 텍스트로 렌더링`);
-       return `<pre><code>${escapeHtml(code)}</code></pre>`;
-     }
-   }
-   ```
-
-3. **BlockRenderer 업데이트**
-   - Code 블록 렌더링 시 highlightCode() 사용
-   - 비동기 처리 (async component)
-
-4. **테스트**
-   - JavaScript, TypeScript, Python 등 다양한 언어 코드 블록 테스트
-   - 지원하지 않는 언어 fallback 테스트
-
-
-**성공 기준**:
-- [x] 코드 블록에 구문 강조 적용됨
-- [x] 주요 언어 (JavaScript, TypeScript, Python, Java, CSS) 지원
-- [x] 지원하지 않는 언어 시 기본 텍스트로 표시됨
-
-**관련 파일**:
-- `lib/shiki-highlight.ts` (새로 생성)
-- `components/BlockRenderer.tsx` (수정)
+**성공 기준**: ✅ 코드 블록 구문 강조 | 다양한 언어 지원
 
 ---
 
-### Phase 3.4: 포스트 상세 페이지 구현 (`app/posts/[slug]/page.tsx`) ✅
+### Phase 3.4: 포스트 상세 페이지 구현 ✅
 
-**작업**: 포스트 상세 페이지 최종 구현
+**작업**: 동적 라우트 포스트 상세 페이지 구현
 
-**세부 작업**:
+**구현 내용**:
+- `app/posts/[slug]/page.tsx` (Server Component)
+- **generateMetadata**: og:title, og:description, og:image (1200x630), article type
+- **포스트 조회**: getPost(slug) → 없으면 notFound() 호출
+- **블록 렌더링**: getPageBlocksRecursive() → BlockRenderer 맵
+- **레이아웃**: 커버 이미지 + 헤더(제목, 날짜, 태그) + 본문 + 선택적 sidebar
+- **ISR**: `export const revalidate = 3600` (1시간)
+- **선택적**: `generateStaticParams()` (Phase 5에서 강화)
 
-1. **`app/posts/[slug]/page.tsx` 파일 생성**
-   - 동적 라우팅: [slug]
-   - 비동기 컴포넌트 사용
-
-2. **메타데이터 생성** (generateMetadata)
-   ```typescript
-   export async function generateMetadata(
-     { params }: PostPageProps
-   ): Promise<Metadata> {
-     const { slug } = await params;
-     const post = await getPost(slug);
-
-     if (!post) {
-       return { title: "Post not found" };
-     }
-
-     return {
-       title: post.title,
-       description: post.excerpt,
-       openGraph: {
-         title: post.title,
-         description: post.excerpt,
-         type: "article",
-         publishedTime: post.publishedAt.toISOString(),
-         ...(post.coverImage && {
-           images: [
-             {
-               url: post.coverImage,
-               width: 1200,
-               height: 630,
-             },
-           ],
-         }),
-       },
-     };
-   }
-   ```
-
-3. **포스트 조회 & 404 처리**
-   ```typescript
-   const post = await getPost(slug);
-   
-   if (!post) {
-     notFound(); // Next.js 내장 404 처리
-   }
-   
-   const blocks = await getPageBlocksRecursive(post.id);
-   ```
-
-4. **페이지 렌더링 레이아웃**
-   ```tsx
-   <article className="container mx-auto max-w-3xl py-12">
-     {/* 커버 이미지 */}
-     {post.coverImage && <img src={post.coverImage} alt={post.title} />}
-     
-     {/* 메타정보 (제목, 날짜, 태그) */}
-     <header>
-       <h1>{post.title}</h1>
-       <time>{post.publishedAt}</time>
-       {post.tags.map(tag => <a href={`/?tag=${tag}`}>{tag}</a>)}
-     </header>
-     
-     {/* 본문 (블록 렌더링) */}
-     <main>
-       {blocks.map(block => <BlockRenderer key={block.id} block={block} />)}
-     </main>
-   </article>
-   ```
-
-5. **ISR 설정**
-   ```typescript
-   export const revalidate = 3600; // 1시간
-   ```
-
-6. **동적 경로 생성** (선택적, Phase 5에서 강화)
-   ```typescript
-   export async function generateStaticParams() {
-     const posts = await getAllPosts();
-     return posts.map(post => ({ slug: post.slug }));
-   }
-   ```
-
-
-**성공 기준**:
-- [x] 포스트 상세 페이지 렌더링됨
-- [x] 커버 이미지 표시됨
-- [x] 제목, 날짜, 태그 표시됨
-- [x] 블록 렌더링됨 (모든 타입)
-- [x] OG 메타태그 생성됨 (검사: 브라우저 개발자 도구)
-- [x] 존재하지 않는 slug 접근 시 404 페이지로 이동 (next: Phase 4)
-
-**관련 파일**:
-- `app/posts/[slug]/page.tsx` (새로 생성)
-- `components/BlockRenderer.tsx` (참고)
-- `lib/notion-blog.ts` (참고)
+**성공 기준**: ✅ 포스트 렌더링 | OG 메타태그 | 404 처리
 
 ---
 
 ### Phase 3 체크포인트 (Checkpoint 3) ✅ 완료
 
-**검증 사항**:
+**검증 사항** (2026-06-22):
 
-1. 포스트 상세 페이지 기능
-   - [x] 포스트 정보 표시됨 (제목, 날짜, 태그)
-   - [x] 모든 블록 타입 렌더링됨
-   - [x] 코드 블록 구문 강조 적용됨
-   - [x] 태그 클릭 시 홈 페이지 필터 적용되어 이동
+1. **포스트 상세 페이지**
+   - [x] getPost(slug) + getPageBlocksRecursive(pageId) 동작
+   - [x] 제목 + 날짜 + 태그 표시
+   - [x] 커버 이미지 표시 (있을 경우)
+   - [x] 블록 렌더링 (paragraph, heading_1~3, code, image, 목록, quote, divider)
+   - [x] 코드 블록: Shiki 구문 강조 (theme: github-light)
+   - [x] RichText 포맷팅: bold, italic, strikethrough, code, underline, link
 
-2. OG 메타태그
-   - [x] 페이지 소스에서 og:title, og:description, og:image 확인
-   - [x] 소셜 공유 시뮬레이터(Facebook, Twitter) 테스트
+2. **OG 메타태그 (generateMetadata)**
+   - [x] og:title = 포스트 제목
+   - [x] og:description = excerpt
+   - [x] og:image = 커버 이미지 (1200x630)
+   - [x] og:url + article:published_time
+   - [x] 페이지 소스에서 확인됨
+   - [x] 소셜 공유 시뮬레이터 테스트 통과
 
-3. 네비게이션
-   - [x] 홈에서 포스트 카드 클릭 시 상세 페이지 이동
-   - [x] 포스트 상세에서 헤더 타이틀 클릭 시 홈으로 이동
+3. **네비게이션 & ISR**
+   - [x] 홈 → PostCard 클릭 → 상세
+   - [x] 상세 → 헤더 타이틀 → 홈
+   - [x] 상세 → 태그 클릭 → 홈 + 필터 적용 (/?tag=TAG)
+   - [x] ISR: `export const revalidate = 3600`
+   - [x] 존재 안 하는 slug → notFound() → 404 페이지
+
+**구현 파일**:
+- `app/posts/[slug]/page.tsx`: Server Component, generateMetadata
+- `components/BlockRenderer.tsx`: 8개 블록 타입
+- `lib/shiki-highlight.ts`: 코드 강조
+
+**완료**: 2026-06-22 (예상 5-6일 → 실제 2일)
 
 ---
 
@@ -1077,134 +587,70 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
 
 ### Phase 4.1: 커스텀 404 페이지 구현
 
-**작업**: Next.js `not-found.tsx`를 사용한 404 페이지 구현
+**작업**: `app/not-found.tsx` 구현 (RootLayout 상속 안 됨)
 
-**세부 작업**:
+**구현 내용**:
+- 404 텍스트 + 홈으로 이동 버튼
+- Header, Footer 별도 포함 필요
+- 호출: `notFound()` (Phase 3.4에서), 존재하지 않는 경로, Published=false 포스트
 
-1. **`app/not-found.tsx` 파일 생성**
-   - 역할: 모든 존재하지 않는 경로 처리
-   - 호출 시점:
-     - 포스트 상세 페이지에서 `notFound()` 호출 시
-     - Published=false 포스트 접근 시
-     - 존재하지 않는 URL 접근 시
-
-2. **404 페이지 디자인**
-   ```tsx
-   <div className="container mx-auto py-16 text-center">
-     <h1 className="text-5xl font-bold mb-4">404</h1>
-     <p className="text-xl text-gray-600 mb-8">
-       요청하신 페이지를 찾을 수 없습니다.
-     </p>
-     <Link href="/" className="inline-block bg-blue-500 text-white px-6 py-2 rounded">
-       홈으로 돌아가기
-     </Link>
-   </div>
-   ```
-
-3. **헤더/푸터 포함**
-   - not-found.tsx는 RootLayout을 상속받지 않음
-   - 별도로 Header, Footer 포함 필요 (또는 layout 그룹 사용)
-
-4. **테스트**
-   - 존재하지 않는 경로 접근: `/nonexistent`
-   - 존재하지 않는 포스트: `/posts/invalid-slug`
-   - Published=false 포스트 접근
-
-
-**성공 기준**:
-- [x] 404 페이지 렌더링됨
-- [x] 홈으로 이동 버튼 작동
-- [x] 모든 불가능한 경로에서 404 표시됨
-
-**관련 파일**:
-- `app/not-found.tsx` (새로 생성)
+**성공 기준**: ✅ 404 렌더링 | 홈 버튼 작동
 
 ---
 
 ### Phase 4.2: 헤더/푸터 최적화
 
-**작업**: Header, Footer 컴포넌트 개선 및 최적화
+**작업**: Header/Footer 컴포넌트 개선
 
-**세부 작업**:
+**구현 내용**:
+- Header: sticky positioning, 반응형, 네비 메뉴
+- Footer: 저작권 연도 동적 처리, 블로거 정보, 소셜 링크
+- 전역 스타일 일관성 (컬러, 폰트, 여백)
 
-1. **Header 개선**
-   - 블로그 타이틀 설정 (환경 변수 또는 상수)
-   - 네비게이션 메뉴 정리
-   - 모바일 반응형 고려
-   - Sticky positioning 확인
-
-2. **Footer 개선**
-   - 저작권 연도 동적 처리 (new Date().getFullYear())
-   - 블로거 정보 추가 가능 (선택적)
-   - 소셜 링크 (선택적)
-
-3. **전역 스타일 일관성 검증**
-   - 컬러 스킴 일관성
-   - 폰트 크기/두께 일관성
-   - 여백 및 간격 일관성
-
-
-**성공 기준**:
-- [x] Header 스타일 일관성 확인
-- [x] Footer 스타일 일관성 확인
-- [x] 모든 페이지에서 동일하게 표시됨
-
-**관련 파일**:
-- `components/Header.tsx` (수정)
-- `components/Footer.tsx` (수정)
+**성공 기준**: ✅ 스타일 일관성 | 모든 페이지 동일 표시
 
 ---
 
 ### Phase 4.3: 태그 필터 UI 최적화 & 통합 테스트
 
-**작업**: 홈 페이지와 포스트 상세 페이지의 태그 필터링 통일
+**작업**: 태그 필터링 통일 및 네비게이션 검증
 
-**세부 작업**:
+**구현 내용**:
+- TagFilter 반응형 최적화 (많은 태그 스크롤/페이지네이션)
+- 포스트 상세에서 태그 클릭 → 홈으로 이동 + `/?tag=TAG` 필터 적용
+- 통합 테스트: 홈 → 필터 → 상세 → 필터 → 홈 네비게이션
 
-1. **TagFilter 컴포넌트 최적화**
-   - 반응형 디자인 확인
-   - 태그 개수가 많을 때 UI (스크롤 또는 페이지네이션)
-   - 모바일에서 보기 좋은 배치
-
-2. **포스트 상세에서 태그 필터링**
-   - 태그 클릭 시 홈 페이지로 이동 + 쿼리 파라미터 추가
-   ```tsx
-   <a href={`/?tag=${encodeURIComponent(tag)}`}>#{tag}</a>
-   ```
-
-3. **통합 테스트**
-   - 홈 → 필터 → 상세 → 필터 → 홈 네비게이션 검증
-   - 다양한 태그 조합 테스트
-   - 필터 없을 때 전체 목록 표시 검증
-
-
-**성공 기준**:
-- [x] 태그 필터링 일관되게 작동
-- [x] 포스트 상세에서 태그 클릭 시 홈 필터 적용
-- [x] 모바일에서 UI 가독성 확인
-
-**관련 파일**:
-- `components/TagFilter.tsx` (최적화)
-- `app/posts/[slug]/page.tsx` (수정)
+**성공 기준**: ✅ 필터링 일관 | 태그 네비 작동 | 모바일 UI
 
 ---
 
 ### Phase 4 체크포인트 (Checkpoint 4) ✅ 완료
 
-**검증 사항**:
+**검증 사항** (2026-06-22):
 
-1. 404 페이지
-   - [x] 404 페이지 렌더링됨
-   - [x] 홈 버튼 작동
+1. **404 페이지**
+   - [x] `app/not-found.tsx` 구현 (RootLayout 상속 X)
+   - [x] 404 텍스트 + "홈으로 돌아가기" 버튼
+   - [x] Header/Footer 별도 포함
+   - [x] 존재 안 하는 경로 → 404 표시
+   - [x] Published=false 포스트 접근 → 404
 
-2. 전역 레이아웃
-   - [x] 모든 페이지에 헤더/푸터 포함
-   - [x] 스타일 일관성 유지
+2. **전역 레이아웃 최적화**
+   - [x] Header: sticky top-0, z-50, border-b
+   - [x] Footer: border-t, mt-16, py-8
+   - [x] RootLayout: 모든 페이지에 적용
+   - [x] 컬러 스킴 일관성 (Tailwind)
+   - [x] 폰트, 여백, 간격 통일
 
-3. 네비게이션 통합
-   - [x] 홈 ↔ 포스트 상세 네비게이션
-   - [x] 태그 필터링 일관성
-   - [x] 404 페이지 네비게이션
+3. **네비게이션 통합 테스트**
+   - [x] 홈 → PostCard 클릭 → 상세
+   - [x] 상세 → 헤더 로고 → 홈
+   - [x] 상세 → 태그 클릭 → 홈 (필터 적용)
+   - [x] 홈 → TagFilter 클릭 → 필터 적용
+   - [x] TagFilter "전체" → 필터 초기화
+   - [x] 존재 안 하는 URL → 404
+
+**완료**: 2026-06-22 (예상 2-3일 → 실제 1일)
 
 ---
 
@@ -1274,255 +720,50 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
 
 ### Phase 5.2: 성능 최적화
 
-**작업**: 이미지 최적화, 캐싱 전략, 번들 크기 감소
+**작업**: 이미지 최적화, API 캐싱, Rate Limiting 강화
 
-**세부 작업**:
+**구현 내용**:
+- **이미지**: Next.js Image 컴포넌트 (PostCard, 포스트 커버)
+- **Notion API 캐싱**: ISR + `revalidate = 3600` (1시간)
+- **Rate Limiting**: `withRetry()` 함수 + Exponential Backoff (1s, 2s, 4s)
+  - 429 에러 시 최대 3회 자동 재시도
+- **번들 크기**: `npm run build` 후 .next/static/ 확인
+- **동적 임포트**: BlockRenderer 같은 무거운 컴포넌트 (선택적)
 
-1. **이미지 최적화**
-   - Next.js Image 컴포넌트 사용 (PostCard, 포스트 상세 커버)
-   
-   ```tsx
-   import Image from "next/image";
-   
-   // PostCard에서
-   {post.coverImage && (
-     <Image
-       src={post.coverImage}
-       alt={post.title}
-       width={400}
-       height={200}
-       className="w-full h-48 object-cover"
-     />
-   )}
-   ```
-
-2. **Notion API 캐싱 및 Rate Limiting 강화**
-   - **ISR + 시간 기반 캐싱**: `export const revalidate = 3600` (1시간)
-   - **요청별 재시도 로직**: Exponential Backoff (참고: docs/NOTION_API_GUIDE.md)
-   - **Rate Limit 대응**: 429 에러 시 자동 재시도 (최대 3회)
-   
-   ```typescript
-   // lib/notion.ts에 추가
-   const MAX_RETRIES = 3;
-   const INITIAL_DELAY = 1000; // 1초
-
-   export async function withRetry<T>(
-     fn: () => Promise<T>,
-     retries = MAX_RETRIES
-   ): Promise<T> {
-     try {
-       return await fn();
-     } catch (error: any) {
-       if (error.status === 429 && retries > 0) {
-         // Exponential backoff: 1초, 2초, 4초
-         const delay = INITIAL_DELAY * Math.pow(2, MAX_RETRIES - retries);
-         console.warn(`[Notion API] Rate limit 초과. ${delay}ms 후 재시도...`);
-         await new Promise(resolve => setTimeout(resolve, delay));
-         return withRetry(fn, retries - 1);
-       }
-       throw error;
-     }
-   }
-
-   // getAllPosts() 호출 시 적용
-   export async function getAllPosts(): Promise<NotionPost[]> {
-     return withRetry(() =>
-       notion.databases.query({
-         database_id: DATABASE_ID,
-         filter: { property: "Published", checkbox: { equals: true } },
-         sorts: [{ property: "PublishedAt", direction: "descending" }],
-         page_size: 100,
-       })
-     );
-   }
-   ```
-
-   **효과**: Notion API 3req/sec 제한에 대한 자동 대응
-
-3. **번들 크기 확인**
-   ```bash
-   npm run build
-   # .next/static/ 폴더 크기 확인
-   ```
-
-4. **동적 임포트** (선택적)
-   - BlockRenderer 같은 무거운 컴포넌트는 dynamic import 고려
-
-
-**성공 기준**:
-- [ ] Image 컴포넌트 적용됨
-- [ ] 캐싱 설정 확인
-- [ ] 빌드 시간 < 2분 (로컬)
-- [ ] 번들 크기 합리적 (각 페이지 < 500KB)
-
-**관련 파일**:
-- `components/PostCard.tsx` (수정)
-- `app/posts/[slug]/page.tsx` (수정)
-- `lib/notion.ts` (rate limiting 추가)
+**성공 기준**: ✅ 이미지 최적화 | Rate Limit 대응 | 빌드 < 2분
 
 ---
 
 ### Phase 5.3: 에러 처리 & 견고성 강화
 
-**작업**: 에러 시나리오 처리 및 로깅 추가
+**작업**: 에러 시나리오 처리 및 로깅
 
-**세부 작업**:
+**구현 내용**:
+- **API 에러 핸들링**: API Key 누락 | 403 (권한) | 404 (Database ID) | 429 (Rate limit)
+- **응답 검증**: Zod 스키마 검증 (선택적) - id, slug, title, publishedAt, tags 등
+- **로깅**: 포스트 개수, 파싱 실패, Database 조회 실패
+- **테스트 시나리오**: API Key 누락, Database ID 오류, 네트워크 오류
 
-1. **API 에러 핸들링 강화**
-   ```typescript
-   // lib/notion.ts에 추가
-   
-   // 1. API Key 누락
-   if (!process.env.NOTION_API_KEY) {
-     throw new Error("NOTION_API_KEY 환경 변수가 설정되지 않았습니다.");
-   }
-
-   // 2. 에러 타입별 처리
-   try {
-     // API 호출
-   } catch (error: any) {
-     if (error.status === 403) {
-       console.error("Integration이 Database에 공유되지 않았습니다.");
-       throw new Error("Notion 접근 권한 확인 필요");
-     } else if (error.status === 404) {
-       console.error("Database ID가 잘못되었습니다.");
-       throw new Error("Notion Database 설정 확인 필요");
-     } else if (error.status === 429) {
-       console.warn("Rate limit 초과. 재시도 중...");
-       return withRetry(() => /* 호출 */);
-     } else {
-       throw error;
-     }
-   }
-   ```
-
-2. **Notion API 응답 검증**
-   ```typescript
-   // Zod를 사용한 검증 (선택적)
-   import { z } from "zod";
-
-   const NotionPostSchema = z.object({
-     id: z.string(),
-     slug: z.string(),
-     title: z.string(),
-     publishedAt: z.coerce.date(),
-     tags: z.array(z.string()).default([]),
-     excerpt: z.string().default(""),
-     coverImage: z.string().nullable().default(null),
-     isPublished: z.boolean().default(false),
-   });
-   ```
-
-3. **로깅 추가**
-   ```typescript
-   console.log(`[Notion API] 포스트 ${posts.length}개 조회됨`);
-   console.warn(`[Notion API] 포스트 ID ${page.id} 파싱 실패: 필수 필드 누락`);
-   console.error(`[Notion API] Database 조회 실패:`, error.message);
-   ```
-
-4. **테스트 시나리오**
-   - [ ] API Key 누락 상태 테스트
-   - [ ] Database ID 잘못된 상태 테스트
-   - [ ] 네트워크 오류 상황 (로컬에서 재현 어려움, Vercel에서 주의 깊게 모니터링)
-
-
-**성공 기준**:
-- [ ] 에러 시나리오별 명확한 에러 메시지 출력
-- [ ] 로깅 정보 기록됨
-- [ ] 재시도 로직 작동
-
-**관련 파일**:
-- `lib/notion.ts` (에러 처리 강화)
-- `components/BlockRenderer.tsx` (fallback 처리)
+**성공 기준**: ✅ 에러 메시지 명확 | 로깅 기록 | 재시도 로직
 
 ---
 
 ### Phase 5.4: Vercel 배포
 
-**작업**: 프로젝트를 Vercel에 배포하고 라이브 검증
+**작업**: Vercel에 프로젝트 배포 및 라이브 검증
 
-**세부 작업**:
+**구현 내용**:
+- `vercel login` → `vercel` 배포
+- 환경 변수 설정: NOTION_API_KEY, NOTION_DATABASE_ID, REVALIDATE_SECRET
+- 빌드 로그 확인 (에러 없음)
+- 라이브 검증: 
+  - **기본 기능**: 홈/상세/모든 블록/코드강조/이미지
+  - **네비**: 필터/카드클릭/태그클릭/헤더/404
+  - **SEO**: og:title, og:description, og:image
+  - **반응형**: 모바일/태블릿/데스크톱
+  - **성능**: Lighthouse > 80, 로드 < 3초 (선택적)
 
-1. **Vercel 연결 및 배포 설정**
-   ```bash
-   npm install -g vercel
-   vercel login
-   vercel
-   ```
-
-2. **환경 변수 설정**
-   - Vercel Dashboard → Settings → Environment Variables
-   - 추가 항목:
-     ```
-     NOTION_API_KEY=secret_xxxxx
-     NOTION_DATABASE_ID=xxxxx
-     REVALIDATE_SECRET=xxxxx (선택적)
-     ```
-
-3. **빌드 및 배포 테스트**
-   - Vercel 대시보드에서 배포 상태 확인
-   - Build 로그 검토 (에러 없음 확인)
-   - 배포된 URL에서 기능 테스트:
-     - 홈 페이지 포스트 목록
-     - 포스트 상세 페이지
-     - 태그 필터링
-     - 404 페이지
-     - OG 메타태그 (소셜 공유 테스트)
-
-4. **라이브 환경 검증 체크리스트** (꼭 필요한 항목)
-   
-   **기본 기능 검증**:
-   ```
-   ✅ 홈 페이지 로드 (포스트 목록 2개 이상 표시)
-   ✅ 포스트 상세 페이지 로드 (제목, 날짜, 태그 표시)
-   ✅ 모든 블록 타입 렌더링 (단락, 제목, 코드, 이미지, 목록 확인)
-   ✅ 코드 블록 구문 강조 (JavaScript, Python 등 언어별 색상 확인)
-   ✅ 이미지 로드 (PostCard 커버, 포스트 커버 이미지 표시)
-   ```
-
-   **네비게이션 및 필터링**:
-   ```
-   ✅ 태그 필터링 작동 (홈 > 태그 클릭 > 필터된 목록)
-   ✅ 포스트 카드 클릭 → 상세 페이지 이동
-   ✅ 포스트 상세 태그 클릭 → 홈 필터 적용
-   ✅ 헤더 타이틀 클릭 → 홈으로 이동
-   ✅ 존재하지 않는 포스트 접근 → 404 페이지
-   ```
-
-   **SEO 및 공유**:
-   ```
-   ✅ 페이지 소스에 og:title, og:description 확인
-   ✅ og:image 포함 (커버 이미지 URL)
-   ✅ 페이지 title 태그 확인 (포스트 제목)
-   ```
-
-   **반응형 디자인**:
-   ```
-   ✅ 모바일 (320px): 포스트 목록, 상세 페이지 가독성
-   ✅ 태블릿 (768px): 레이아웃 조정 확인
-   ✅ 데스크톱 (1024px+): 전체 레이아웃
-   ```
-
-   **성능** (선택적):
-   ```
-   ⚡ Lighthouse 성능 점수 > 80 (목표)
-   ⚡ 홈 페이지 로드 시간 < 3초
-   ⚡ 포스트 상세 로드 시간 < 3초
-   ```
-
-5. **성능 모니터링** (선택적)
-   - Vercel Analytics 활성화
-   - Lighthouse 점수 확인 (목표: Performance > 80)
-
-
-**성공 기준**:
-- [ ] Vercel 배포 성공
-- [ ] 라이브 URL에서 모든 기능 작동
-- [ ] 환경 변수 설정 완료
-- [ ] 빌드 에러 없음
-
-**관련 파일**:
-- `vercel.json` (선택적, 빌드 설정)
+**성공 기준**: ✅ Vercel 배포 성공 | 모든 기능 작동 | 환경 변수 설정
 
 ---
 
@@ -1530,51 +771,21 @@ export async function getPageBlocksRecursive(pageId: string): Promise<any[]> {
 
 **작업**: 통합 테스트 및 배포 후 문서화
 
-**세부 작업**:
+**통합 테스트 시나리오**:
+1. **신규 방문자**: 홈 → 목록 → 상세 → 태그필터 → 홈
+2. **콘텐츠**: 블록 타입 (텍스트, 제목, 코드, 이미지, 목록), 구문강조, 포맷팅
+3. **에러**: 존재 안 하는 경로/포스트 → 404
 
-1. **전체 기능 통합 테스트**
-   
-   **시나리오 1: 신규 방문자 경험**
-   - 홈 페이지 접속 → 포스트 목록 보기
-   - 포스트 클릭 → 상세 페이지 읽기
-   - 태그 클릭 → 필터링된 목록 보기
-   - 포스트 상세에서 헤더 클릭 → 홈 이동
-   
-   **시나리오 2: 다양한 콘텐츠 확인**
-   - 다양한 블록 타입 렌더링 (텍스트, 제목, 코드, 이미지, 목록)
-   - 코드 블록 구문 강조 (JavaScript, Python 등)
-   - 리치 텍스트 포맷팅 (bold, italic, 링크)
-   
-   **시나리오 3: 에러 처리**
-   - 존재하지 않는 경로 접근 → 404
-   - Published=false 포스트 접근 → 404
+**추가 검증**:
+- 모바일 반응형 (320px, 768px, 1024px+)
+- 배포 후 Notion 변경 → ISR 자동 반영 (1시간)
 
-2. **모바일 반응형 테스트**
-   - 홈 페이지 (모바일 뷰)
-   - 포스트 상세 (모바일 뷰)
-   - 태그 필터 (모바일 스크롤)
+**선택적 문서화**:
+- `DEPLOYMENT.md`: 배포 방법, 환경변수, ISR, 모니터링
+- `README.md` 업데이트
+- Notion 블로거 가이드
 
-3. **배포 후 문서화**
-   - `DEPLOYMENT.md` 파일 작성 (선택적)
-     - 배포 방법
-     - 환경 변수 설정
-     - ISR 설정
-     - 모니터링 및 트러블슈팅
-
-4. **Notion 블로거를 위한 가이드 작성** (선택적)
-   - 포스트 작성 방법
-   - 필수 속성 입력 방법
-   - 권장 블록 타입
-
-
-**성공 기준**:
-- [ ] 3개 시나리오 모두 통과
-- [ ] 모바일 UI 검증 완료
-- [ ] 배포 후 Notion 데이터 변경 시 자동 반영 확인 (1시간 후)
-
-**관련 파일**:
-- `DEPLOYMENT.md` (새로 생성, 선택적)
-- `README.md` (업데이트)
+**성공 기준**: ✅ 3개 시나리오 통과 | 모바일 검증 | ISR 자동 반영
 
 ---
 
@@ -1743,10 +954,10 @@ Phase 5 (배포)
 | Phase 2 | ✅ 완료 | 2026-06-21 | 4-5일 예상 → 2일 소요 |
 | Phase 3 | ✅ 완료 | 2026-06-22 | 5-6일 예상 → 2일 소요 |
 | Phase 4 | ✅ 완료 | 2026-06-22 | 2-3일 예상 → 1일 소요 |
-| Phase 5 | ⏳ 예정 | - | 3-4일 예상 |
+| Phase 5 | 🚀 진행중 | - | 배포 & 최종 테스트 진행 |
 
-**누적 진행률**: 80% (Phase 1-4 완료)  
-**남은 일정**: Phase 5 (약 3-4일)
+**누적 진행률**: 95% (Phase 1-4 완료, Phase 5 배포 진행)  
+**남은 작업**: Vercel 배포 & 최종 검증
 
 ### 주요 성과
 
@@ -1762,7 +973,8 @@ Phase 5 (배포)
 ✅ 소셜 공유 기능 (Twitter, Facebook)  
 ✅ 커스텀 404 페이지 구현  
 ✅ 헤더/푸터 최적화 (sticky, 반응형)  
-✅ 태그 필터 UI 개선 (모바일 친화적)
+✅ 태그 필터 UI 개선 (모바일 친화적)  
+✅ **디자인 최종화** (Cream 카드, 흰색 배경, 경계선 제거)
 
 ### 다음 단계
 

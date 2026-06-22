@@ -56,7 +56,7 @@ export function TagFilter({ tags, selectedTag }: TagFilterProps) {
             "h-8 px-3 text-xs font-medium rounded-full transition-all",
             selectedTag
               ? "bg-white border border-gray-300 text-gray-700 hover:border-gray-400"
-              : "bg-rose-500 text-white hover:bg-rose-600"
+              : "bg-gray-600 text-white hover:bg-gray-700"
           )}
         >
           전체
@@ -71,7 +71,7 @@ export function TagFilter({ tags, selectedTag }: TagFilterProps) {
               className={cn(
                 "h-8 px-3 text-xs font-medium rounded-full transition-all select-none whitespace-nowrap",
                 selectedTag === tag
-                  ? "bg-rose-500 text-white shadow-sm"
+                  ? "bg-gray-600 text-white shadow-sm"
                   : "bg-gray-100 text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50"
               )}
             >
@@ -87,7 +87,7 @@ export function TagFilter({ tags, selectedTag }: TagFilterProps) {
           선택됨: <span className="font-semibold">{selectedTag}</span>
           <button
             onClick={handleClearFilter}
-            className="ml-2 text-rose-500 hover:text-rose-700 underline"
+            className="ml-2 text-gray-600 hover:text-gray-800 underline"
           >
             초기화
           </button>

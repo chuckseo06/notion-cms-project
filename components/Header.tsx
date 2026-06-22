@@ -4,13 +4,13 @@ export function Header() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
+    <header className="sticky top-0 z-50" style={{ backgroundColor: '#F5E6D3' }}>
       <div className="container mx-auto max-w-4xl px-4 py-4">
         <div className="flex justify-between items-center">
           {/* 블로그 타이틀/로고 */}
           <Link
             href="/"
-            className="text-2xl md:text-3xl font-bold text-gray-900 hover:text-rose-500 transition-colors"
+            className="text-2xl md:text-3xl font-bold text-foreground hover:text-gray-600 transition-colors"
           >
             보석함
           </Link>
@@ -19,7 +19,7 @@ export function Header() {
           <nav className="flex items-center gap-6">
             <Link
               href="/"
-              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-sm font-medium text-gray-600 hover:text-foreground transition-colors"
             >
               홈
             </Link>
