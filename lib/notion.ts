@@ -538,12 +538,16 @@ export async function getPostBlocks(pageId: string): Promise<NotionBlock[]> {
         const blockType = blockData.type;
         const hasChildren = blockData.has_children ? "자식 있음" : "자식 없음";
 
+        // BlockRenderer가 기대하는 구조로 변환
+        // { type, paragraph?: {...}, heading_1?: {...}, ... }
         const notionBlock: NotionBlock = {
           id: blockData.id,
           type: blockType,
           content: blockData,
           parentId: pageId,
-        };
+          // 블록 타입별 데이터를 직접 추가 (BlockRenderer 호환성)
+          [blockType]: blockData[blockType],
+        } as any;
 
         // 자식 블록이 있으면 재귀적으로 조회
         if (blockData.has_children) {
